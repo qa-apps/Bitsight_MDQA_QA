@@ -3,3 +3,4 @@
 2023-01-17: Create base page object model structure
 2023-01-17: Implement homepage page object class
 2023-01-17: Add products page object implementation
+2023-01-18: Setup pytest configuration and fixtures
