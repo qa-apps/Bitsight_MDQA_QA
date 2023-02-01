@@ -5,3 +5,4 @@
 2023-01-17: Add products page object implementation
 2023-01-18: Setup pytest configuration and fixtures
 2023-01-31: Configure test markers and browser settings
+2023-02-01: Implement smoke test suite for homepage
