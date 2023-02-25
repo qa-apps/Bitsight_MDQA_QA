@@ -31,3 +31,28 @@ class TestCrossBrowser:
         
         # Check CSS support
         css_support = page.evaluate('''() => {
+            return {
+                grid: CSS.supports('display', 'grid'),
+                flexbox: CSS.supports('display', 'flex'),
+                customProperties: CSS.supports('--custom', 'value'),
+                backdropFilter: CSS.supports('backdrop-filter', 'blur(10px)')
+            };
+        }''')
+        
+        # Modern browsers should support these
+        assert css_support['grid'], "CSS Grid not supported"
+        assert css_support['flexbox'], "Flexbox not supported"
+        
+    @pytest.mark.skip(reason="Run separately with Firefox")
+    def test_firefox_compatibility(self, page: Page):
+        """
+        Test website functionality in Firefox
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Firefox-specific checks
+        is_firefox = page.evaluate('() => navigator.userAgent.includes("Firefox")')
+        
+        if is_firefox:
+            # Test Firefox-specific features
