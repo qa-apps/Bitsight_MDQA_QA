@@ -58,3 +58,63 @@ class TestErrorHandling:
             
             return broken;
         }''')
+        
+        # Should not have broken images on production
+        assert len(broken_images) == 0, f"Found {len(broken_images)} broken images"
+        
+        # Check if images have fallback alt text
+        all_images = page.locator('img').all()[:10]
+        for img in all_images:
+            alt = img.get_attribute('alt')
+            assert alt is not None, "Image missing alt attribute for accessibility"
+            
+    def test_javascript_error_handling(self, page: Page):
+        """
+        Test JavaScript error handling
+        """
+        homepage = HomePage(page)
+        
+        js_errors = []
+        page.on('pageerror', lambda error: js_errors.append(error))
+        
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        
+        # Trigger some interactions
+        page.click('body')
+        page.wait_for_timeout(1000)
+        
+        # Should not have uncaught JavaScript errors
+        assert len(js_errors) == 0, f"JavaScript errors found: {js_errors}"
+        
+    def test_form_submission_error_handling(self, page: Page):
+        """
+        Test form submission error handling
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        form = page.locator('form').first
+        
+        if form.is_visible():
+            # Submit empty form
+            submit_button = form.locator('button[type="submit"], input[type="submit"]').first
+            
+            if submit_button.is_visible():
+                submit_button.click()
+                page.wait_for_timeout(2000)
+                
+                # Should show validation errors, not break
+                error_messages = page.locator('.error, .invalid, [role="alert"]').count()
+                
+                # Page should still be functional
+                assert page.title() != "", "Page broke after form error"
+                
+    def test_network_timeout_handling(self, page: Page):
+        """
+        Test handling of network timeouts
+        """
+        homepage = HomePage(page)
