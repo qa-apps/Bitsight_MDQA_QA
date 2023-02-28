@@ -24,3 +24,9 @@ class TestMobileResponsiveness:
             {'name': 'Samsung Galaxy S20', 'width': 412, 'height': 915}
         ]
         
+        for device in mobile_viewports:
+            page.set_viewport_size({'width': device['width'], 'height': device['height']})
+            homepage.navigate_to()
+            
+            # Check if page loads properly
+            assert homepage.is_visible(homepage.hero_title), f"Hero not visible on {device['name']}"

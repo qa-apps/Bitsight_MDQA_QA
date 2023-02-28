@@ -58,3 +58,63 @@ class TestIntegrationE2E:
                 
         # Step 5: Navigate back to homepage
         homepage.navigate_to()
+        assert homepage.is_homepage_loaded(), "Could not return to homepage"
+        
+    def test_product_exploration_journey(self, page: Page):
+        """
+        Test user journey exploring different products
+        """
+        homepage = HomePage(page)
+        products_page = ProductsPage(page)
+        
+        # Start from homepage
+        homepage.navigate_to()
+        
+        # Explore each product area
+        product_paths = [
+            '/products/third-party-risk-management',
+            '/solutions/exposure-management',
+            '/products/cyber-threat-intelligence'
+        ]
+        
+        for path in product_paths:
+            products_page.navigate_to(path)
+            page.wait_for_load_state('networkidle')
+            
+            # Verify on correct page
+            assert path.split('/')[-1] in page.url, f"Failed to navigate to {path}"
+            
+            # Check for Learn More or Demo buttons
+            cta_buttons = page.locator('a:has-text("Learn"), a:has-text("Demo")').all()
+            assert len(cta_buttons) > 0, f"No CTAs found on {path}"
+            
+            # Check for feature information
+            features = products_page.get_product_features()
+            assert len(features) > 0, f"No features found on {path}"
+            
+    def test_information_seeking_journey(self, page: Page):
+        """
+        Test journey of user seeking information
+        """
+        homepage = HomePage(page)
+        
+        # Step 1: Start from homepage
+        homepage.navigate_to()
+        
+        # Step 2: Navigate to Resources
+        resources_link = page.locator('a:has-text("Resources")').first
+        if resources_link.is_visible():
+            resources_link.click()
+            page.wait_for_load_state('networkidle')
+            
+            assert 'resources' in page.url.lower(), "Did not navigate to resources"
+            
+            # Step 3: Look for specific resource types
+            resource_types = ['case study', 'whitepaper', 'blog', 'guide']
+            found_resources = []
+            
+            for resource_type in resource_types:
+                resource_link = page.locator(f'text=/{resource_type}/i').first
+                if resource_link:
+                    found_resources.append(resource_type)
+                    
