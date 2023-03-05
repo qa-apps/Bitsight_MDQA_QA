@@ -58,3 +58,63 @@ class TestPerformanceMetrics:
             return fcp ? fcp.startTime : null;
         }''')
         
+        if fcp:
+            assert fcp < 3000, f"First Contentful Paint too slow: {fcp}ms"
+            
+    def test_largest_contentful_paint(self, page: Page):
+        """
+        Test Largest Contentful Paint (LCP) metric
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_timeout(3000)  # Wait for LCP to stabilize
+        
+        # Get LCP metric
+        lcp = page.evaluate('''() => {
+            return new Promise((resolve) => {
+                const observer = new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    const lastEntry = entries[entries.length - 1];
+                    resolve(lastEntry.startTime);
+                });
+                observer.observe({ entryTypes: ['largest-contentful-paint'] });
+                
+                // Fallback if no LCP
+                setTimeout(() => resolve(null), 1000);
+            });
+        }''')
+        
+        if lcp:
+            assert lcp < 4000, f"Largest Contentful Paint too slow: {lcp}ms"
+            
+    def test_cumulative_layout_shift(self, page: Page):
+        """
+        Test Cumulative Layout Shift (CLS) metric
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_timeout(3000)
+        
+        # Measure CLS
+        cls = page.evaluate('''() => {
+            let clsScore = 0;
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    if (!entry.hadRecentInput) {
+                        clsScore += entry.value;
+                    }
+                }
+            });
+            observer.observe({ entryTypes: ['layout-shift'] });
+            
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    observer.disconnect();
+                    resolve(clsScore);
+                }, 2000);
+            });
+        }''')
+        
+        # CLS should be less than 0.1 for good user experience
+        if cls:
+            assert cls < 0.25, f"Cumulative Layout Shift too high: {cls}"

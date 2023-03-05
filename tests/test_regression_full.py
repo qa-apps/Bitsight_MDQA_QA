@@ -30,3 +30,6 @@ class TestRegressionFull:
         assert homepage.is_homepage_loaded(), "Homepage not fully loaded"
         
         # Check all navigation elements
+        nav_status = homepage.verify_navigation_menu()
+        for key, value in nav_status.items():
+            assert value, f"Navigation element {key} is missing"
