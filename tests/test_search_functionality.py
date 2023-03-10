@@ -58,3 +58,63 @@ class TestSearchFunctionality:
         
         search_queries = [
             'risk management',
+            'cybersecurity',
+            'third party',
+            'compliance',
+            'threat intelligence'
+        ]
+        
+        for query in search_queries:
+            homepage.navigate_to()
+            
+            search_form = page.locator('#views-exposed-form-search-search-page').first
+            if search_form.is_visible():
+                search_input = search_form.locator('input').first
+                search_input.fill(query)
+                search_input.press('Enter')
+                
+                page.wait_for_load_state('domcontentloaded')
+                
+                # Verify search executed
+                assert page.url != homepage.base_url, f"Search for '{query}' did not navigate"
+                
+    def test_search_input_validation(self, page: Page):
+        """
+        Test search input field validation
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            
+            # Test empty search
+            search_input.clear()
+            search_input.press('Enter')
+            page.wait_for_timeout(1000)
+            
+            # Test very long query
+            long_query = 'a' * 500
+            search_input.fill(long_query)
+            actual_value = search_input.input_value()
+            
+            # Check if there's a length limit
+            if len(actual_value) < len(long_query):
+                print(f"Search input has character limit: {len(actual_value)}")
+                
+            search_input.clear()
+            
+    def test_search_special_characters(self, page: Page):
+        """
+        Test search with special characters
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        special_queries = [
+            'test & security',
+            'risk-management',
+            'third_party',
+            '2024 report',
