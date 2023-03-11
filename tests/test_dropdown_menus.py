@@ -38,3 +38,17 @@ class TestDropdownMenus:
         assert len(dropdown_items) > 0, "No items in Solutions dropdown"
         
         # Store items for testing
+        item_texts = []
+        item_hrefs = []
+        
+        for item in dropdown_items:
+            text = item.text_content()
+            href = item.get_attribute('href')
+            
+            item_texts.append(text)
+            item_hrefs.append(href)
+            
+            # Verify item properties
+            assert text, "Dropdown item has no text"
+            assert href or item.get_attribute('role') == 'menuitem', "Dropdown item has no action"
+            
