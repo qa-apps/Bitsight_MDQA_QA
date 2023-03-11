@@ -118,3 +118,63 @@ class TestContentValidation:
         
         # Find privacy policy link
         privacy_link = page.locator('a:has-text("Privacy")').first
+        
+        assert privacy_link.is_visible(), "Privacy policy link not found"
+        
+        # Click and verify navigation
+        privacy_link.click()
+        page.wait_for_load_state('networkidle')
+        
+        # Verify privacy page content
+        page_content = page.content().lower()
+        privacy_keywords = ['privacy', 'data', 'information', 'personal', 'collect']
+        
+        found_keywords = [kw for kw in privacy_keywords if kw in page_content]
+        assert len(found_keywords) >= 3, "Privacy policy page missing expected content"
+        
+    def test_terms_of_service_link(self, page: Page):
+        """
+        Test terms of service/use link and content
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Find terms link
+        terms_link = page.locator('a:has-text("Terms")').first
+        
+        if terms_link.is_visible():
+            terms_link.click()
+            page.wait_for_load_state('networkidle')
+            
+            # Verify terms page content
+            page_content = page.content().lower()
+            terms_keywords = ['terms', 'agreement', 'service', 'use', 'conditions']
+            
+            found_keywords = [kw for kw in terms_keywords if kw in page_content]
+            assert len(found_keywords) >= 2, "Terms page missing expected content"
+            
+    def test_social_media_links(self, page: Page):
+        """
+        Test social media links presence
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Common social media platforms
+        social_platforms = [
+            ('linkedin', 'linkedin.com'),
+            ('twitter', 'twitter.com'),
+            ('facebook', 'facebook.com'),
+            ('youtube', 'youtube.com')
+        ]
+        
+        found_social = []
+        
+        for platform, domain in social_platforms:
+            social_link = page.locator(f'a[href*="{domain}"]').first
+            if social_link:
+                found_social.append(platform)
+                
+                # Verify link has proper attributes
+                href = social_link.get_attribute('href')
+                target = social_link.get_attribute('target')

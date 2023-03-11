@@ -56,3 +56,34 @@ class TestCrossBrowser:
         
         if is_firefox:
             # Test Firefox-specific features
+            assert homepage.is_homepage_loaded(), "Homepage failed in Firefox"
+            
+            # Check for Firefox-specific issues
+            nav_menu = homepage.verify_navigation_menu()
+            assert all(nav_menu.values()), "Navigation issues in Firefox"
+            
+    @pytest.mark.skip(reason="Run separately with WebKit")
+    def test_webkit_safari_compatibility(self, page: Page):
+        """
+        Test website functionality in WebKit/Safari
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # WebKit/Safari specific checks
+        is_webkit = page.evaluate('() => navigator.userAgent.includes("WebKit")')
+        
+        if is_webkit:
+            # Test Safari-specific features
+            assert homepage.is_homepage_loaded(), "Homepage failed in WebKit"
+            
+            # Check for Safari-specific CSS support
+            webkit_features = page.evaluate('''() => {
+                return {
+                    webkitAppearance: CSS.supports('-webkit-appearance', 'none'),
+                    safariSmooth: CSS.supports('-webkit-font-smoothing', 'antialiased')
+                };
+            }''')
+            
+    def test_javascript_api_compatibility(self, page: Page):
+        """
