@@ -33,3 +33,10 @@ class TestUIElements:
                 # This could be color, background, transform, etc.
                 
                 # Test if button is clickable
+                is_disabled = button.get_attribute('disabled')
+                if not is_disabled:
+                    assert button.is_enabled(), "Button appears enabled but is not"
+                    
+    def test_form_input_elements(self, page: Page):
+        """
+        Test various form input elements

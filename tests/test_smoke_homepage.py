@@ -58,3 +58,63 @@ class TestSmokeHomepage:
         
     def test_product_sections_visible(self, page: Page):
         """
+        Test that all product sections are visible on homepage
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        product_status = homepage.verify_product_sections()
+        
+        assert product_status['tprm'], "TPRM section not visible"
+        assert product_status['exposure'], "Exposure Management section not visible"
+        assert product_status['threat_intel'], "Threat Intelligence section not visible"
+        assert product_status['governance'], "Governance section not visible"
+        
+    def test_request_demo_button_clickable(self, page: Page):
+        """
+        Test Request Demo button is clickable and navigates correctly
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        initial_url = page.url
+        homepage.click_request_demo()
+        page.wait_for_load_state('networkidle')
+        
+        assert page.url != initial_url, "URL did not change after clicking Request Demo"
+        assert 'demo' in page.url.lower() or 'contact' in page.url.lower(), "Did not navigate to demo/contact page"
+        
+    def test_page_has_footer(self, page: Page):
+        """
+        Test that footer is present with links
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        footer = page.locator('footer')
+        assert footer.is_visible(), "Footer is not visible"
+        
+        footer_links = homepage.get_footer_links()
+        assert len(footer_links) > 0, "No footer links found"
+        
+    def test_page_loads_within_timeout(self, page: Page):
+        """
+        Test page loads within acceptable time
+        """
+        homepage = HomePage(page)
+        
+        import time
+        start_time = time.time()
+        homepage.navigate_to()
+        load_time = time.time() - start_time
+        
+        assert load_time < 10, f"Page took too long to load: {load_time} seconds"
+        
+    def test_critical_images_load(self, page: Page):
+        """
+        Test that critical images on homepage are loaded
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        images = page.locator('img').all()[:5]  # Check first 5 images
