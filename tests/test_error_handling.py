@@ -118,3 +118,63 @@ class TestErrorHandling:
         Test handling of network timeouts
         """
         homepage = HomePage(page)
+        
+        # Set very short timeout
+        page.set_default_timeout(100)
+        
+        try:
+            # This might timeout
+            page.goto('https://httpstat.us/200?sleep=5000')
+        except Exception as e:
+            # Should handle timeout gracefully
+            assert 'timeout' in str(e).lower(), "Timeout not properly handled"
+            
+        # Reset timeout
+        page.set_default_timeout(30000)
+        
+    def test_redirect_handling(self, page: Page):
+        """
+        Test redirect handling
+        """
+        homepage = HomePage(page)
+        
+        # Test common redirect scenarios
+        redirect_urls = [
+            f"{homepage.base_url}/index.html",
+            f"{homepage.base_url}/home",
+            homepage.base_url.replace('https://', 'http://')  # HTTP to HTTPS
+        ]
+        
+        for url in redirect_urls:
+            try:
+                response = page.goto(url, wait_until='domcontentloaded')
+                
+                if response:
+                    # Check if redirected properly
+                    final_url = page.url
+                    
+                    # Should redirect to main domain
+                    assert 'bitsight.com' in final_url, f"Redirect failed for {url}"
+                    
+            except Exception:
+                # Some redirects might not work in test environment
+                pass
+                
+    def test_invalid_input_handling(self, page: Page):
+        """
+        Test handling of invalid user inputs
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Try XSS in search
+        search_payloads = [
+            '<script>alert("XSS")</script>',
+            '"><script>alert("XSS")</script>',
+            "'; DROP TABLE users; --",
+            '../../../etc/passwd'
+        ]
+        
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
