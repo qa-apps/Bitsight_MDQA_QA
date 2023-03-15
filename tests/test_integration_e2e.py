@@ -118,3 +118,59 @@ class TestIntegrationE2E:
                 if resource_link:
                     found_resources.append(resource_type)
                     
+            assert len(found_resources) > 0, "No resources found"
+            
+        # Step 4: Use search functionality
+        homepage.navigate_to()
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            search_input.fill("security")
+            search_input.press('Enter')
+            page.wait_for_load_state('networkidle')
+            
+            # Verify search results
+            assert 'search' in page.url or 'security' in page.url, "Search did not execute"
+            
+    def test_navigation_consistency_journey(self, page: Page):
+        """
+        Test navigation consistency across different pages
+        """
+        homepage = HomePage(page)
+        
+        pages_to_test = [
+            '/',
+            '/products/third-party-risk-management',
+            '/resources',
+            '/contact-us'
+        ]
+        
+        for page_path in pages_to_test:
+            homepage.navigate_to(page_path)
+            page.wait_for_load_state('networkidle')
+            
+            # Check header is present
+            header = page.locator('header').first
+            assert header.is_visible(), f"Header missing on {page_path}"
+            
+            # Check footer is present
+            footer = page.locator('footer').first
+            assert footer.is_visible(), f"Footer missing on {page_path}"
+            
+            # Check main navigation
+            nav = page.locator('nav').first
+            assert nav.is_visible() or page.locator('.mobile-menu').is_visible(), f"Navigation missing on {page_path}"
+            
+    def test_mobile_user_journey(self, page: Page):
+        """
+        Test complete user journey on mobile device
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        
+        # Step 1: Load homepage on mobile
+        homepage.navigate_to()
+        
