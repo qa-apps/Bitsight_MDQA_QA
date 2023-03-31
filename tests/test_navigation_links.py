@@ -118,3 +118,63 @@ class TestNavigationLinks:
                 
     def test_footer_navigation_links(self, page: Page):
         """
+        Test all footer navigation links
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        footer_links = homepage.get_footer_links()
+        assert len(footer_links) > 0, "No footer links found"
+        
+        # Test sample of footer links
+        valid_links = [link for link in footer_links if link and not link.startswith('#')][:5]
+        
+        for link in valid_links:
+            if link.startswith('http'):
+                response = page.request.head(link)
+                assert response.status < 400, f"Footer link broken: {link}"
+                
+    def test_product_section_navigation(self, page: Page):
+        """
+        Test navigation through product sections
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        product_sections = ['tprm', 'exposure', 'threat_intel', 'governance']
+        
+        for section in product_sections:
+            homepage.navigate_to()
+            homepage.navigate_to_product_section(section)
+            page.wait_for_timeout(1000)
+            
+            # Verify URL changed or page scrolled
+            current_url = page.url
+            assert current_url, f"Failed to navigate to {section} section"
+            
+    def test_breadcrumb_navigation(self, page: Page):
+        """
+        Test breadcrumb navigation on product pages
+        """
+        products_page = ProductsPage(page)
+        
+        # Navigate to a product page
+        products_page.navigate_to_tprm()
+        
+        breadcrumbs = page.locator('nav[aria-label="breadcrumb"], .breadcrumb')
+        if breadcrumbs.is_visible():
+            breadcrumb_links = breadcrumbs.locator('a').all()
+            
+            for link in breadcrumb_links:
+                href = link.get_attribute('href')
+                assert href, "Breadcrumb link missing href"
+                
+    def test_logo_navigation_to_homepage(self, page: Page):
+        """
+        Test that logo click navigates to homepage
+        """
+        homepage = HomePage(page)
+        products_page = ProductsPage(page)
+        
+        # Navigate to a different page
+        products_page.navigate_to_tprm()

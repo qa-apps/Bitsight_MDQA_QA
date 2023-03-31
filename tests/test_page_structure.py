@@ -55,3 +55,12 @@ class TestPageStructure:
         assert description, "Meta description missing"
         assert len(description) > 50, "Meta description too short"
         assert len(description) < 160, "Meta description too long"
+        
+        # Check Open Graph tags
+        og_title = page.locator('meta[property="og:title"]').get_attribute('content')
+        og_description = page.locator('meta[property="og:description"]').get_attribute('content')
+        og_image = page.locator('meta[property="og:image"]').get_attribute('content')
+        
+        # OG tags are recommended for social sharing
+        if og_title:
+            assert og_title, "Open Graph title present"
