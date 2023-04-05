@@ -33,3 +33,32 @@ class TestRegressionFull:
         nav_status = homepage.verify_navigation_menu()
         for key, value in nav_status.items():
             assert value, f"Navigation element {key} is missing"
+            
+        # Check hero section
+        hero_status = homepage.verify_hero_section()
+        for key, value in hero_status.items():
+            assert value, f"Hero element {key} is missing"
+            
+        # Check product sections
+        product_status = homepage.verify_product_sections()
+        for key, value in product_status.items():
+            assert value, f"Product section {key} is missing"
+            
+    def test_tprm_product_page_complete(self, page: Page):
+        """
+        Complete regression test for TPRM product page
+        """
+        products = ProductsPage(page)
+        products.navigate_to_tprm()
+        
+        # Verify page loaded
+        assert 'third-party' in page.url.lower() or 'tprm' in page.url.lower(), "Not on TPRM page"
+        
+        # Verify all TPRM elements
+        tprm_elements = products.verify_tprm_page_elements()
+        
+        assert tprm_elements.get('vendor_profiles', False), "Vendor profiles section missing"
+        assert tprm_elements.get('ai_assessment', False), "AI assessment section missing"
+        assert tprm_elements.get('framework_mapping', False), "Framework mapping section missing"
+        
+        # Check for product images

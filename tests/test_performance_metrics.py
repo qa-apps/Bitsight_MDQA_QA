@@ -118,3 +118,63 @@ class TestPerformanceMetrics:
         # CLS should be less than 0.1 for good user experience
         if cls:
             assert cls < 0.25, f"Cumulative Layout Shift too high: {cls}"
+            
+    def test_time_to_interactive(self, page: Page):
+        """
+        Test Time to Interactive (TTI) metric
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Measure when page becomes interactive
+        tti = page.evaluate('''() => {
+            return new Promise((resolve) => {
+                if (document.readyState === 'complete') {
+                    resolve(performance.now());
+                } else {
+                    window.addEventListener('load', () => {
+                        resolve(performance.now());
+                    });
+                }
+            });
+        }''')
+        
+        assert tti < 5000, f"Time to Interactive too long: {tti}ms"
+        
+    def test_resource_loading_performance(self, page: Page):
+        """
+        Test resource loading performance
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        
+        # Get resource timing data
+        resources = page.evaluate('''() => {
+            const resources = performance.getEntriesByType('resource');
+            return resources.map(r => ({
+                name: r.name,
+                type: r.initiatorType,
+                duration: r.duration,
+                size: r.transferSize || 0
+            }));
+        }''')
+        
+        # Analyze resource loading
+        slow_resources = [r for r in resources if r['duration'] > 3000]
+        assert len(slow_resources) == 0, f"Found {len(slow_resources)} slow resources (>3s)"
+        
+        # Check for large resources
+        large_resources = [r for r in resources if r['size'] > 1000000]  # 1MB
+        for resource in large_resources[:3]:
+            print(f"Large resource: {resource['name'][-50:]} - {resource['size']/1024/1024:.2f}MB")
+            
+    def test_javascript_execution_time(self, page: Page):
+        """
+        Test JavaScript execution performance
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Measure JS execution time
+        js_perf = page.evaluate('''() => {
