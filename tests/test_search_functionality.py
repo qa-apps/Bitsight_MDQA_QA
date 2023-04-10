@@ -118,3 +118,63 @@ class TestSearchFunctionality:
             'risk-management',
             'third_party',
             '2024 report',
+            'info@bitsight',
+            '"exact phrase"'
+        ]
+        
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            for query in special_queries:
+                search_input = search_form.locator('input').first
+                search_input.fill(query)
+                search_input.press('Enter')
+                
+                page.wait_for_load_state('domcontentloaded')
+                
+                # Should handle special characters without errors
+                assert page.title() != "", f"Page broke with query: {query}"
+                
+                # Go back for next search
+                homepage.navigate_to()
+                
+    def test_search_autocomplete(self, page: Page):
+        """
+        Test search autocomplete/suggestions if available
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            
+            # Type slowly to trigger autocomplete
+            search_input.type('sec', delay=200)
+            page.wait_for_timeout(1000)
+            
+            # Check for autocomplete suggestions
+            suggestions = page.locator('.autocomplete, .suggestions, [role="listbox"]').first
+            
+            if suggestions and suggestions.is_visible():
+                suggestion_items = suggestions.locator('li, [role="option"]').all()
+                assert len(suggestion_items) > 0, "No autocomplete suggestions shown"
+                
+    def test_search_result_relevance(self, page: Page):
+        """
+        Test if search results are relevant
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        search_query = "risk"
+        
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            search_input.fill(search_query)
+            search_input.press('Enter')
+            
+            page.wait_for_load_state('networkidle')
