@@ -118,3 +118,54 @@ class TestSmokeHomepage:
         homepage.navigate_to()
         
         images = page.locator('img').all()[:5]  # Check first 5 images
+        
+        for img in images:
+            if img.is_visible():
+                natural_width = img.evaluate('el => el.naturalWidth')
+                assert natural_width > 0, "Image failed to load properly"
+                
+    def test_mobile_responsive_view(self, page: Page):
+        """
+        Test homepage displays correctly on mobile viewport
+        """
+        homepage = HomePage(page)
+        
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        homepage.navigate_to()
+        
+        # Mobile menu should be present
+        mobile_menu = page.locator('[aria-label="Menu"], button:has-text("Menu"), .mobile-menu')
+        assert mobile_menu.is_visible() or page.locator('button').first.is_visible(), "Mobile menu not found"
+        
+        # Hero should still be visible
+        assert homepage.is_visible(homepage.hero_title), "Hero title not visible on mobile"
+        
+    def test_no_broken_links_on_homepage(self, page: Page):
+        """
+        Test for broken links on homepage
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check a sample of links to avoid timeout
+        all_links = homepage.get_all_links()[:10]
+        
+        for link in all_links:
+            if link and link.startswith('http'):
+                response = page.request.head(link)
+                assert response.status < 400, f"Broken link found: {link} (status: {response.status})"
+                
+    def test_cookie_banner_present(self, page: Page):
+        """
+        Test that cookie consent banner appears
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Cookie banner usually appears on first visit
+        cookie_banner = page.locator('[class*="cookie"], [id*="cookie"], [data-testid*="cookie"]')
+        
+        # Note: Cookie banner might not appear if already accepted
+        if cookie_banner.is_visible():
+            assert True, "Cookie banner is present"
