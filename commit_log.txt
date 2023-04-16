@@ -24,3 +24,4 @@
 2023-03-31: Develop form element validation
 2023-04-05: Implement modal and accordion tests
 2023-04-10: Create usability and accessibility tests
+2023-04-15: Add WCAG compliance test cases
