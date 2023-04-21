@@ -40,3 +40,63 @@ class TestUIElements:
     def test_form_input_elements(self, page: Page):
         """
         Test various form input elements
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Test text inputs
+        text_inputs = page.locator('input[type="text"], input[type="email"]').all()
+        for input_field in text_inputs[:3]:
+            if input_field.is_visible():
+                # Test focus state
+                input_field.focus()
+                assert input_field.evaluate('el => document.activeElement === el'), "Input did not receive focus"
+                
+                # Test placeholder
+                placeholder = input_field.get_attribute('placeholder')
+                
+                # Test input capability
+                input_field.fill("Test input")
+                assert input_field.input_value() == "Test input", "Input value not set correctly"
+                
+                # Clear input
+                input_field.clear()
+                assert input_field.input_value() == "", "Input not cleared"
+                
+    def test_dropdown_menus_ui(self, page: Page):
+        """
+        Test dropdown menu UI behavior
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Test Solutions dropdown
+        solutions_button = page.locator('button:has-text("Solutions")').first
+        if solutions_button.is_visible():
+            # Check initial state (should be closed)
+            dropdown_menu = page.locator('[role="menu"]').first
+            initial_visibility = dropdown_menu.is_visible() if dropdown_menu else False
+            
+            # Open dropdown
+            solutions_button.click()
+            page.wait_for_timeout(500)
+            
+            # Check dropdown is now visible
+            assert dropdown_menu.is_visible() if dropdown_menu else True, "Dropdown did not open"
+            
+            # Check dropdown items are visible
+            dropdown_items = page.locator('[role="menuitem"], .dropdown-item').all()
+            assert len(dropdown_items) > 0, "No dropdown items found"
+            
+            # Close dropdown by clicking outside
+            page.click('body', position={'x': 0, 'y': 0})
+            page.wait_for_timeout(500)
+            
+            # Verify dropdown closed
+            if dropdown_menu:
+                assert not dropdown_menu.is_visible(), "Dropdown did not close"
+                
+    def test_navigation_menu_responsiveness(self, page: Page):

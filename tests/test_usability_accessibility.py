@@ -118,3 +118,12 @@ class TestUsabilityAccessibility:
         page.wait_for_load_state('networkidle')
         
         # Check form inputs have labels
+        inputs = page.locator('input, select, textarea').all()
+        
+        for input_field in inputs:
+            if input_field.is_visible():
+                input_id = input_field.get_attribute('id')
+                input_name = input_field.get_attribute('name')
+                aria_label = input_field.get_attribute('aria-label')
+                aria_labelledby = input_field.get_attribute('aria-labelledby')
+                
