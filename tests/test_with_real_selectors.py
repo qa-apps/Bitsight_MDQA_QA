@@ -36,3 +36,44 @@ class TestWithRealSelectors:
         
         # Get menu items using REAL class: main-menu-block__item-link
         menu_links = homepage.get_real_menu_links()
+        
+        assert len(menu_links) > 0, "No menu links found with actual class 'main-menu-block__item-link'"
+        
+        # Print what we actually found
+        for link in menu_links[:5]:
+            print(f"Found menu item: {link['text']} -> {link['href']}")
+            
+    def test_actual_demo_buttons(self, page: Page):
+        """
+        Test the actual demo button URLs found in DOM
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # These are the ACTUAL demo URLs found:
+        # - /demo/security-rating
+        # - /demo/bitsight-demo  
+        # - /demo/bitsight-threat-intelligence-demo
+        
+        demo_buttons = [
+            ('a[href*="/demo/security-rating"]', 'Security Rating Demo'),
+            ('a[href*="/demo/bitsight-demo"]', 'BitSight Demo'),
+            ('a[href*="/demo/bitsight-threat-intelligence-demo"]', 'Threat Intel Demo')
+        ]
+        
+        for selector, name in demo_buttons:
+            elements = page.locator(selector).all()
+            if elements:
+                print(f"✓ Found {name}: {len(elements)} instances")
+            else:
+                print(f"✗ {name} not found")
+                
+    def test_actual_hero_section(self, page: Page):
+        """
+        Test hero section with actual text and classes
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        hero_info = homepage.verify_real_hero_section()
+        
