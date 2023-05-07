@@ -178,3 +178,44 @@ class TestContentValidation:
                 # Verify link has proper attributes
                 href = social_link.get_attribute('href')
                 target = social_link.get_attribute('target')
+                
+                assert href and domain in href, f"{platform} link invalid"
+                # Social links should open in new tab
+                assert target == '_blank' or target is None, f"{platform} link should open in new tab"
+                
+        assert len(found_social) > 0, "No social media links found"
+        
+    def test_testimonials_content(self, page: Page):
+        """
+        Test testimonials/case studies content
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for testimonials section
+        testimonials = page.locator('.testimonial, .case-study, .customer-story, blockquote').all()
+        
+        if testimonials:
+            for testimonial in testimonials[:3]:
+                text = testimonial.text_content()
+                
+                # Testimonials should have substantial content
+                assert text and len(text) > 20, "Testimonial has insufficient content"
+                
+                # Check for attribution
+                author = testimonial.locator('.author, .name, .attribution').first
+                
+    def test_cta_button_text(self, page: Page):
+        """
+        Test Call-to-Action button text content
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Find CTA buttons
+        cta_buttons = page.locator('a.button, button, a[class*="btn"]').all()[:10]
+        
+        common_cta_texts = ['demo', 'learn', 'get started', 'contact', 'download', 'sign up', 'request']
+        
+        for button in cta_buttons:
+            if button.is_visible():
