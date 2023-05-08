@@ -87,3 +87,52 @@ class TestCrossBrowser:
             
     def test_javascript_api_compatibility(self, page: Page):
         """
+        Test JavaScript API compatibility across browsers
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check for modern JavaScript APIs
+        js_apis = page.evaluate('''() => {
+            return {
+                fetch: typeof fetch !== 'undefined',
+                promise: typeof Promise !== 'undefined',
+                localStorage: typeof localStorage !== 'undefined',
+                sessionStorage: typeof sessionStorage !== 'undefined',
+                intersectionObserver: typeof IntersectionObserver !== 'undefined',
+                mutationObserver: typeof MutationObserver !== 'undefined',
+                requestAnimationFrame: typeof requestAnimationFrame !== 'undefined'
+            };
+        }''')
+        
+        # All modern browsers should support these
+        assert js_apis['fetch'], "Fetch API not supported"
+        assert js_apis['promise'], "Promise not supported"
+        assert js_apis['localStorage'], "LocalStorage not supported"
+        
+    def test_viewport_rendering_cross_browser(self, page: Page):
+        """
+        Test viewport rendering across different browsers
+        """
+        homepage = HomePage(page)
+        
+        viewports = [
+            {'width': 1920, 'height': 1080, 'name': 'Full HD'},
+            {'width': 1366, 'height': 768, 'name': 'Laptop'},
+            {'width': 375, 'height': 667, 'name': 'iPhone'},
+            {'width': 768, 'height': 1024, 'name': 'iPad'}
+        ]
+        
+        for viewport in viewports:
+            page.set_viewport_size({'width': viewport['width'], 'height': viewport['height']})
+            homepage.navigate_to()
+            
+            # Check if page renders correctly
+            is_visible = homepage.is_visible(homepage.hero_title)
+            assert is_visible, f"Content not visible at {viewport['name']} viewport"
+            
+            # Check for horizontal scroll (shouldn't exist)
+            has_horizontal_scroll = page.evaluate('''() => {
+                return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+            }''')
+            
