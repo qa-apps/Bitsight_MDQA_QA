@@ -29,3 +29,4 @@
 2023-05-06: Develop ARIA label validation tests
 2023-05-07: Build page structure validation tests
 2023-05-08: Add HTML structure test cases
+2023-05-09: Create semantic HTML validation
