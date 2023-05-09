@@ -52,3 +52,23 @@ class TestDropdownMenus:
             assert text, "Dropdown item has no text"
             assert href or item.get_attribute('role') == 'menuitem', "Dropdown item has no action"
             
+        # Test clicking first item
+        if dropdown_items:
+            first_item = dropdown_items[0]
+            first_text = first_item.text_content()
+            first_item.click()
+            page.wait_for_load_state('networkidle')
+            
+            # Verify navigation or action occurred
+            assert page.url != homepage.base_url or page.locator(f'text="{first_text}"').is_visible(), "Dropdown item click had no effect"
+            
+        # Return to homepage for next test
+        homepage.navigate_to()
+        
+        # Test dropdown closes when clicking outside
+        solutions_button.click()
+        page.wait_for_timeout(500)
+        assert dropdown.is_visible(), "Dropdown should be open"
+        
+        # Click outside
+        page.click('body', position={'x': 0, 'y': 0})

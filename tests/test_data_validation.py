@@ -178,3 +178,63 @@ class TestDataValidation:
                     method = form.get_attribute('method')
                     action = form.get_attribute('action')
                     form_id = form.get_attribute('id')
+                    
+                    # Validate form data
+                    assert method in ['get', 'post', 'GET', 'POST', None], f"Invalid form method: {method}"
+                    
+                    # Check input fields
+                    inputs = form.locator('input').all()
+                    
+                    for input_field in inputs:
+                        input_type = input_field.get_attribute('type')
+                        input_name = input_field.get_attribute('name')
+                        required = input_field.get_attribute('required')
+                        pattern = input_field.get_attribute('pattern')
+                        maxlength = input_field.get_attribute('maxlength')
+                        
+                        # Validate input attributes
+                        assert input_type, "Input missing type attribute"
+                        
+                        # Email fields should have email type
+                        if input_name and 'email' in input_name.lower():
+                            assert input_type == 'email', f"Email field has wrong type: {input_type}"
+                            
+                        # Phone fields should have tel type
+                        if input_name and ('phone' in input_name.lower() or 'tel' in input_name.lower()):
+                            assert input_type == 'tel', f"Phone field has wrong type: {input_type}"
+                            
+                        # Check data validation attributes
+                        if pattern:
+                            # Pattern should be valid regex
+                            try:
+                                re.compile(pattern)
+                            except re.error:
+                                assert False, f"Invalid pattern regex: {pattern}"
+                                
+                        if maxlength:
+                            assert maxlength.isdigit(), f"Invalid maxlength: {maxlength}"
+                            assert int(maxlength) > 0, f"Maxlength too small: {maxlength}"
+                            
+    def test_navigation_data_structure(self, page: Page):
+        """
+        Test navigation menu data structure
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Get navigation structure
+        nav_data = page.evaluate('''() => {
+            const nav = document.querySelector('nav, header');
+            const items = [];
+            
+            if (nav) {
+                const links = nav.querySelectorAll('a');
+                links.forEach(link => {
+                    items.push({
+                        text: link.textContent.trim(),
+                        href: link.href,
+                        hasSubmenu: link.getAttribute('aria-expanded') !== null,
+                        ariaLabel: link.getAttribute('aria-label')
+                    });
+                });
+            }
