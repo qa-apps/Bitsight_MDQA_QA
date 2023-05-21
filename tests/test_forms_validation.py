@@ -53,3 +53,31 @@ class TestFormsValidation:
         email_field = page.locator('input[type="email"], input[name*="email"]').first
         
         if email_field and email_field.is_visible():
+            # Test invalid email formats
+            invalid_emails = [
+                'notanemail',
+                '@nodomain.com',
+                'missing@',
+                'spaces in@email.com',
+                'double@@email.com'
+            ]
+            
+            for invalid_email in invalid_emails:
+                email_field.fill(invalid_email)
+                email_field.blur()  # Trigger validation
+                page.wait_for_timeout(500)
+                
+                # Check for validation state
+                is_invalid = email_field.get_attribute('aria-invalid') == 'true'
+                has_error_class = 'error' in (email_field.get_attribute('class') or '')
+                
+                # Clear for next test
+                email_field.clear()
+                
+    def test_phone_field_validation(self, page: Page):
+        """
+        Test phone number field validation
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()

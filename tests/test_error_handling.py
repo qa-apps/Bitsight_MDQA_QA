@@ -178,3 +178,63 @@ class TestErrorHandling:
         search_form = page.locator('#views-exposed-form-search-search-page').first
         
         if search_form.is_visible():
+            search_input = search_form.locator('input[type="text"], input[type="search"]').first
+            
+            for payload in search_payloads:
+                if search_input.is_visible():
+                    search_input.fill(payload)
+                    search_input.press('Enter')
+                    page.wait_for_timeout(1000)
+                    
+                    # Page should not break or show errors
+                    assert page.title() != "", "Page broke with invalid input"
+                    
+                    # Should not execute script
+                    page_text = page.content()
+                    assert '<script>alert' not in page_text, "Script not properly escaped"
+                    
+    def test_browser_back_button_handling(self, page: Page):
+        """
+        Test browser back button functionality
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        initial_url = page.url
+        
+        # Navigate to another page
+        homepage.click_request_demo()
+        page.wait_for_load_state('networkidle')
+        second_url = page.url
+        
+        assert initial_url != second_url, "Navigation did not occur"
+        
+        # Go back
+        page.go_back()
+        page.wait_for_load_state('networkidle')
+        
+        # Should return to initial page
+        assert page.url == initial_url, "Back button did not work correctly"
+        
+        # Go forward
+        page.go_forward()
+        page.wait_for_load_state('networkidle')
+        
+        # Should return to second page
+        assert page.url == second_url, "Forward button did not work correctly"
+        
+    def test_session_timeout_handling(self, page: Page):
+        """
+        Test session timeout handling
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Simulate long idle time
+        page.wait_for_timeout(2000)
+        
+        # Try to interact after "timeout"
+        page.click('body')
+        
+        # Page should still be responsive
+        assert page.title() != "", "Page not responsive after idle time"
