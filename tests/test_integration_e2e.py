@@ -174,3 +174,63 @@ class TestIntegrationE2E:
         # Step 1: Load homepage on mobile
         homepage.navigate_to()
         
+        # Step 2: Open mobile menu
+        mobile_menu = page.locator('.mobile-menu, .hamburger, [aria-label="Menu"]').first
+        
+        if mobile_menu.is_visible():
+            mobile_menu.click()
+            page.wait_for_timeout(500)
+            
+            # Step 3: Navigate to a product page
+            product_link = page.locator('a:has-text("Products"), a:has-text("Solutions")').first
+            if product_link.is_visible():
+                product_link.click()
+                page.wait_for_load_state('networkidle')
+                
+        # Step 4: Scroll through content
+        page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2)')
+        page.wait_for_timeout(1000)
+        
+        # Step 5: Return to top
+        page.evaluate('window.scrollTo(0, 0)')
+        
+        # Verify still functional
+        assert page.title() != "", "Mobile journey broke the page"
+        
+    def test_multi_product_comparison_journey(self, page: Page):
+        """
+        Test journey comparing multiple products
+        """
+        homepage = HomePage(page)
+        products_page = ProductsPage(page)
+        
+        # Collect information from each product
+        product_info = {}
+        
+        products = [
+            ('TPRM', '/products/third-party-risk-management'),
+            ('Exposure', '/solutions/exposure-management'),
+            ('Threat Intel', '/products/cyber-threat-intelligence')
+        ]
+        
+        for name, path in products:
+            products_page.navigate_to(path)
+            page.wait_for_load_state('networkidle')
+            
+            # Collect features
+            features = products_page.get_product_features()
+            
+            # Collect CTAs
+            ctas = page.locator('a:has-text("Demo"), a:has-text("Learn")').count()
+            
+            product_info[name] = {
+                'features': len(features),
+                'ctas': ctas,
+                'url': page.url
+            }
+            
+        # Verify we collected info from all products
+        assert len(product_info) == 3, "Failed to collect all product information"
+        
+        # Each product should have features and CTAs
+        for product, info in product_info.items():

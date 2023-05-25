@@ -78,3 +78,28 @@ class TestMobileResponsiveness:
                     page.mouse.move(box['x'] + 50, box['y'] + box['height'] / 2)
                     page.mouse.up()
                     
+                    page.wait_for_timeout(500)
+                    
+    def test_mobile_navigation_menu(self, page: Page):
+        """
+        Test mobile navigation menu functionality
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Find and click mobile menu button
+        mobile_menu = page.locator('.mobile-menu, .hamburger, button[aria-label="Menu"], .menu-toggle').first
+        
+        if mobile_menu.is_visible():
+            mobile_menu.click()
+            page.wait_for_timeout(500)
+            
+            # Check if menu opened
+            nav_menu = page.locator('.mobile-nav, nav, [role="menu"]').first
+            assert nav_menu.is_visible(), "Mobile navigation menu did not open"
+            
+            # Check menu items
+            menu_items = nav_menu.locator('a').all()
