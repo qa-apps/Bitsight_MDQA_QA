@@ -64,3 +64,10 @@ class TestPageStructure:
         # OG tags are recommended for social sharing
         if og_title:
             assert og_title, "Open Graph title present"
+            
+    def test_semantic_html_structure(self, page: Page):
+        """
+        Test use of semantic HTML5 elements
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()

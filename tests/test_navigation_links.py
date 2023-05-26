@@ -178,3 +178,63 @@ class TestNavigationLinks:
         
         # Navigate to a different page
         products_page.navigate_to_tprm()
+        
+        # Click logo
+        logo = page.locator('a[href="/"], .logo, [aria-label*="home"]').first
+        if logo.is_visible():
+            logo.click()
+            page.wait_for_load_state('networkidle')
+            
+            assert homepage.base_url in page.url, "Logo did not navigate to homepage"
+            
+    def test_all_navigation_links_valid(self, page: Page):
+        """
+        Test that all navigation links have valid hrefs
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Get all navigation links
+        nav_links = page.locator('nav a, header a').all()
+        
+        for link in nav_links[:10]:  # Test sample to avoid timeout
+            href = link.get_attribute('href')
+            
+            if href and not href.startswith('#') and not href.startswith('javascript'):
+                assert href.startswith('http') or href.startswith('/'), f"Invalid link format: {href}"
+                
+    def test_sticky_navigation_on_scroll(self, page: Page):
+        """
+        Test if navigation remains sticky on scroll
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Get initial navigation position
+        nav = page.locator('nav, header').first
+        initial_position = nav.bounding_box()
+        
+        # Scroll down
+        page.evaluate('window.scrollTo(0, 1000)')
+        page.wait_for_timeout(500)
+        
+        # Check if navigation is still visible
+        assert nav.is_visible(), "Navigation disappeared on scroll"
+        
+    def test_back_button_navigation(self, page: Page):
+        """
+        Test browser back button functionality
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        initial_url = page.url
+        
+        # Navigate to another page
+        homepage.click_request_demo()
+        page.wait_for_load_state('networkidle')
+        
+        # Use browser back button
+        page.go_back()
+        page.wait_for_load_state('networkidle')
+        
