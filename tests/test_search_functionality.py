@@ -178,3 +178,63 @@ class TestSearchFunctionality:
             search_input.press('Enter')
             
             page.wait_for_load_state('networkidle')
+            
+            # Check if results page contains search term
+            page_content = page.content().lower()
+            assert search_query.lower() in page_content, f"Search results don't contain '{search_query}'"
+            
+    def test_search_filters(self, page: Page):
+        """
+        Test search filters if available
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Perform initial search
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            search_input.fill("security")
+            search_input.press('Enter')
+            
+            page.wait_for_load_state('networkidle')
+            
+            # Look for filter options
+            filters = page.locator('.filter, .facet, input[type="checkbox"]').all()
+            
+            if filters:
+                # Try applying a filter
+                for filter_element in filters[:2]:
+                    if filter_element.is_visible():
+                        filter_element.click()
+                        page.wait_for_timeout(1000)
+                        
+    def test_search_pagination(self, page: Page):
+        """
+        Test search results pagination
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Search for common term likely to have multiple results
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            search_input.fill("security")
+            search_input.press('Enter')
+            
+            page.wait_for_load_state('networkidle')
+            
+            # Look for pagination
+            pagination = page.locator('.pagination, .pager, nav[aria-label="pagination"]').first
+            
+            if pagination and pagination.is_visible():
+                # Check for page numbers
+                page_links = pagination.locator('a, button').all()
+                
+                if len(page_links) > 1:
+                    # Click next page
+                    next_button = pagination.locator('a:has-text("Next"), button:has-text("Next")').first
+                    if next_button and next_button.is_visible():
