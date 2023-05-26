@@ -178,3 +178,63 @@ class TestPerformanceMetrics:
         
         # Measure JS execution time
         js_perf = page.evaluate('''() => {
+            const start = performance.now();
+            // Simulate some JS work
+            for (let i = 0; i < 1000000; i++) {
+                Math.sqrt(i);
+            }
+            return performance.now() - start;
+        }''')
+        
+        assert js_perf < 1000, f"JavaScript execution too slow: {js_perf}ms"
+        
+    def test_memory_usage(self, page: Page):
+        """
+        Test memory usage if available
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        
+        # Get memory info if available
+        memory = page.evaluate('''() => {
+            if (performance.memory) {
+                return {
+                    used: performance.memory.usedJSHeapSize,
+                    total: performance.memory.totalJSHeapSize,
+                    limit: performance.memory.jsHeapSizeLimit
+                };
+            }
+            return null;
+        }''')
+        
+        if memory:
+            used_mb = memory['used'] / 1024 / 1024
+            total_mb = memory['total'] / 1024 / 1024
+            
+            assert used_mb < 100, f"High memory usage: {used_mb:.2f}MB"
+            print(f"Memory usage: {used_mb:.2f}MB / {total_mb:.2f}MB")
+            
+    def test_navigation_timing(self, page: Page):
+        """
+        Test navigation timing metrics
+        """
+        homepage = HomePage(page)
+        
+        # Navigate to different pages and measure
+        pages_to_test = [
+            ('/', 'Homepage'),
+            ('/products/third-party-risk-management', 'TPRM'),
+            ('/resources', 'Resources')
+        ]
+        
+        for path, name in pages_to_test:
+            homepage.navigate_to(path)
+            page.wait_for_load_state('domcontentloaded')
+            
+            nav_timing = page.evaluate('''() => {
+                const nav = performance.getEntriesByType('navigation')[0];
+                return {
+                    fetchStart: nav.fetchStart,
+                    responseEnd: nav.responseEnd,
+                    domComplete: nav.domComplete,

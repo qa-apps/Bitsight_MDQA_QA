@@ -62,3 +62,29 @@ class TestRegressionFull:
         assert tprm_elements.get('framework_mapping', False), "Framework mapping section missing"
         
         # Check for product images
+        assert products.check_product_images(), "Product images not loading properly"
+        
+        # Check for CTAs
+        cta_status = products.verify_cta_buttons()
+        assert any(cta_status.values()), "No CTA buttons found on TPRM page"
+        
+    def test_exposure_management_complete(self, page: Page):
+        """
+        Complete regression test for Exposure Management page
+        """
+        products = ProductsPage(page)
+        products.navigate_to_exposure_management()
+        
+        # Verify correct page
+        assert 'exposure' in page.url.lower() or 'management' in page.url.lower(), "Not on Exposure page"
+        
+        # Verify exposure elements
+        exposure_elements = products.verify_exposure_page_elements()
+        
+        assert exposure_elements.get('digital_assets', False), "Digital assets section missing"
+        assert exposure_elements.get('shadow_it', False), "Shadow IT section missing"
+        assert exposure_elements.get('risk_visualization', False), "Risk visualization missing"
+        
+        # Check for features list
+        features = products.get_product_features()
+        assert len(features) > 0, "No product features found"
