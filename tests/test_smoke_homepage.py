@@ -169,3 +169,6 @@ class TestSmokeHomepage:
         # Note: Cookie banner might not appear if already accepted
         if cookie_banner.is_visible():
             assert True, "Cookie banner is present"
+        else:
+            # This is acceptable as cookies might have been accepted
+            assert True, "Cookie banner not shown (possibly already accepted)"

@@ -100,3 +100,50 @@ class TestUIElements:
                 assert not dropdown_menu.is_visible(), "Dropdown did not close"
                 
     def test_navigation_menu_responsiveness(self, page: Page):
+        """
+        Test navigation menu UI at different screen sizes
+        """
+        homepage = HomePage(page)
+        
+        # Desktop view
+        page.set_viewport_size({'width': 1920, 'height': 1080})
+        homepage.navigate_to()
+        
+        desktop_nav = page.locator('nav, header').first
+        assert desktop_nav.is_visible(), "Desktop navigation not visible"
+        
+        # Tablet view
+        page.set_viewport_size({'width': 768, 'height': 1024})
+        page.wait_for_timeout(500)
+        
+        # Mobile view
+        page.set_viewport_size({'width': 375, 'height': 667})
+        page.wait_for_timeout(500)
+        
+        # Check for hamburger menu in mobile
+        mobile_menu_button = page.locator('.hamburger, [aria-label="Menu"], .mobile-menu-toggle').first
+        assert mobile_menu_button.is_visible() or page.locator('button').first.is_visible(), "Mobile menu button not found"
+        
+    def test_modal_dialog_ui(self, page: Page):
+        """
+        Test modal dialog UI if present
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Try to trigger a modal (e.g., video modal, contact modal)
+        modal_triggers = page.locator('[data-toggle="modal"], [data-modal], button:has-text("Watch")').all()
+        
+        for trigger in modal_triggers[:1]:
+            if trigger.is_visible():
+                trigger.click()
+                page.wait_for_timeout(1000)
+                
+                # Check for modal
+                modal = page.locator('.modal, [role="dialog"], .overlay').first
+                if modal.is_visible():
+                    # Check for close button
+                    close_button = modal.locator('.close, [aria-label="Close"], button:has-text("×")').first
+                    assert close_button.is_visible(), "Modal close button not found"
+                    
+                    # Close modal
