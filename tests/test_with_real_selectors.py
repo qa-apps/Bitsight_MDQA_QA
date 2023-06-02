@@ -77,3 +77,33 @@ class TestWithRealSelectors:
         
         hero_info = homepage.verify_real_hero_section()
         
+        # The ACTUAL h1 text is: "AI-powered intelligence that outsmarts cyber risk"
+        assert hero_info['h1_exists'], "H1 element not found"
+        assert hero_info['hero_contains_ai_text'], "H1 doesn't contain expected 'AI-powered' text"
+        
+        # The actual hero container class is: hero-homepage__title
+        assert hero_info['hero_container_exists'], "Hero container with class 'hero-homepage__title' not found"
+        
+        print(f"Actual H1 text: {hero_info['h1_text']}")
+        
+    def test_actual_footer_structure(self, page: Page):
+        """
+        Test footer with actual classes found
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        footer_info = homepage.get_real_footer_info()
+        
+        assert footer_info['exists'], "Footer not found"
+        
+        # The ACTUAL footer classes are: "site-footer footer"
+        assert 'site-footer' in (footer_info.get('class') or ''), "Footer missing 'site-footer' class"
+        assert 'footer' in (footer_info.get('class') or ''), "Footer missing 'footer' class"
+        
+        # Actual footer has 27 links as discovered
+        assert footer_info.get('link_count', 0) > 20, f"Footer has only {footer_info.get('link_count', 0)} links, expected > 20"
+        
+    def test_actual_login_button(self, page: Page):
+        """
+        Test the actual login button URL

@@ -127,3 +127,63 @@ class TestUsabilityAccessibility:
                 aria_label = input_field.get_attribute('aria-label')
                 aria_labelledby = input_field.get_attribute('aria-labelledby')
                 
+                # Check for associated label
+                if input_id:
+                    label = page.locator(f'label[for="{input_id}"]').first
+                    has_label = label.is_visible() if label else False
+                else:
+                    has_label = False
+                    
+                # Input should have some form of label
+                assert has_label or aria_label or aria_labelledby, f"Input {input_name} missing label"
+                
+                # Check for required field indication
+                is_required = input_field.get_attribute('required') or input_field.get_attribute('aria-required')
+                
+    def test_color_contrast(self, page: Page):
+        """
+        Test color contrast for text readability
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Sample text elements to check
+        text_elements = page.locator('p, span, a, button').all()[:10]
+        
+        for element in text_elements:
+            if element.is_visible():
+                # Get computed styles
+                styles = element.evaluate('''el => {
+                    const computed = window.getComputedStyle(el);
+                    return {
+                        color: computed.color,
+                        backgroundColor: computed.backgroundColor,
+                        fontSize: computed.fontSize
+                    };
+                }''')
+                
+                # Basic check - text should not be same color as background
+                if styles['color'] and styles['backgroundColor']:
+                    assert styles['color'] != styles['backgroundColor'], "Text and background are same color"
+                    
+    def test_focus_indicators(self, page: Page):
+        """
+        Test that focus indicators are visible for keyboard navigation
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Tab to first link
+        page.keyboard.press('Tab')
+        page.wait_for_timeout(100)
+        
+        # Get focused element
+        focused_element = page.locator(':focus').first
+        
+        if focused_element.is_visible():
+            # Check for focus styles
+            focus_styles = focused_element.evaluate('''el => {
+                const computed = window.getComputedStyle(el);
+                return {
+                    outline: computed.outline,
+                    border: computed.border,
