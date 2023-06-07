@@ -219,3 +219,63 @@ class TestContentValidation:
         
         for button in cta_buttons:
             if button.is_visible():
+                button_text = button.text_content()
+                
+                # CTA should have text
+                assert button_text and len(button_text.strip()) > 0, "CTA button has no text"
+                
+                # Check if it's a meaningful CTA
+                has_cta_keyword = any(keyword in button_text.lower() for keyword in common_cta_texts)
+                
+    def test_navigation_labels(self, page: Page):
+        """
+        Test navigation menu labels and text
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Get navigation items
+        nav_items = page.locator('nav a, header a').all()[:20]
+        
+        for item in nav_items:
+            if item.is_visible():
+                item_text = item.text_content()
+                
+                # Navigation items should have text
+                assert item_text and len(item_text.strip()) > 0, "Navigation item has no text"
+                
+                # Text should be reasonably short for navigation
+                assert len(item_text) < 50, f"Navigation text too long: {item_text}"
+                
+    def test_error_message_content(self, page: Page):
+        """
+        Test error message content quality
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Navigate to 404 page
+        page.goto(f"{homepage.base_url}/nonexistent-page-404-test")
+        
+        page_content = page.content()
+        
+        # Error page should have helpful content
+        helpful_elements = ['home', 'back', 'search', 'sitemap', 'contact']
+        found_elements = [elem for elem in helpful_elements if elem in page_content.lower()]
+        
+        # Should provide navigation options
+        assert len(found_elements) > 0, "404 page not helpful to users"
+        
+    def test_loading_message_content(self, page: Page):
+        """
+        Test loading states and messages
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for loading indicators
+        loading_indicators = page.locator('.loading, .spinner, [aria-busy="true"]').all()
+        
+        for indicator in loading_indicators:
+            if indicator.is_visible():
+                # Loading indicators should have accessible text

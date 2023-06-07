@@ -136,3 +136,31 @@ class TestCrossBrowser:
                 return document.documentElement.scrollWidth > document.documentElement.clientWidth;
             }''')
             
+            assert not has_horizontal_scroll, f"Horizontal scroll detected at {viewport['name']}"
+            
+    def test_font_rendering_cross_browser(self, page: Page):
+        """
+        Test font rendering and loading across browsers
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check font loading
+        fonts = page.evaluate('''() => {
+            const fontFaces = [];
+            document.fonts.forEach(font => {
+                fontFaces.push({
+                    family: font.family,
+                    status: font.status,
+                    weight: font.weight,
+                    style: font.style
+                });
+            });
+            return fontFaces;
+        }''')
+        
+        # Check if fonts loaded successfully
+        loaded_fonts = [f for f in fonts if f['status'] == 'loaded']
+        assert len(loaded_fonts) > 0, "No fonts loaded successfully"
+        
+        # Check computed font styles
