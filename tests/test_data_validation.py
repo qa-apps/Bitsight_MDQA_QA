@@ -238,3 +238,63 @@ class TestDataValidation:
                     });
                 });
             }
+            
+            return items;
+        }''')
+        
+        # Validate navigation data
+        assert len(nav_data) > 0, "No navigation items found"
+        
+        for item in nav_data:
+            # Each item should have text and href
+            assert item['text'] or item['ariaLabel'], "Nav item missing text"
+            assert item['href'], "Nav item missing href"
+            
+            # Check for valid URLs
+            if item['href'].startswith('http'):
+                assert 'bitsight.com' in item['href'] or item['href'].startswith('http'), "Invalid nav URL"
+                
+    def test_schema_org_validation(self, page: Page):
+        """
+        Test Schema.org microdata if present
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Check for microdata
+        microdata_items = page.locator('[itemscope]').all()
+        
+        for item in microdata_items:
+            itemtype = item.get_attribute('itemtype')
+            
+            if itemtype:
+                # Validate schema.org URL
+                assert 'schema.org' in itemtype, f"Invalid schema type: {itemtype}"
+                
+                # Check for required properties based on type
+                if 'Organization' in itemtype:
+                    name = item.locator('[itemprop="name"]').first
+                    assert name, "Organization schema missing name"
+                    
+                if 'Product' in itemtype:
+                    name = item.locator('[itemprop="name"]').first
+                    description = item.locator('[itemprop="description"]').first
+                    assert name or description, "Product schema missing required properties"
+                    
+    def test_api_endpoint_validation(self, page: Page):
+        """
+        Test API endpoints referenced in the page
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Look for API endpoints in page
+        api_endpoints = page.evaluate('''() => {
+            const endpoints = [];
+            
+            // Check for API calls in scripts
+            const scripts = document.querySelectorAll('script');
+            scripts.forEach(script => {
+                const content = script.innerHTML;
+                const apiPattern = /https?:\/\/[^\\s"']+api[^\\s"']*/gi;
+                const matches = content.match(apiPattern);

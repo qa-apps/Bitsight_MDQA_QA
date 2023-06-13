@@ -72,3 +72,8 @@ class TestDropdownMenus:
         
         # Click outside
         page.click('body', position={'x': 0, 'y': 0})
+        page.wait_for_timeout(500)
+        assert not dropdown.is_visible(), "Dropdown did not close when clicking outside"
+        
+    def test_products_dropdown_complete(self, page: Page):
+        """
