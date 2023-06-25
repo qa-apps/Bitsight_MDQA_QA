@@ -81,3 +81,22 @@ class TestFormsValidation:
         homepage = HomePage(page)
         homepage.navigate_to()
         homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        phone_field = page.locator('input[type="tel"], input[name*="phone"]').first
+        
+        if phone_field and phone_field.is_visible():
+            # Test various phone formats
+            phone_numbers = [
+                '123-456-7890',
+                '(123) 456-7890',
+                '+1 123 456 7890',
+                '1234567890',
+                'invalid phone'
+            ]
+            
+            for phone in phone_numbers:
+                phone_field.fill(phone)
+                phone_field.blur()
+                page.wait_for_timeout(200)

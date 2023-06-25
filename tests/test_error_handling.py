@@ -238,3 +238,63 @@ class TestErrorHandling:
         
         # Page should still be responsive
         assert page.title() != "", "Page not responsive after idle time"
+        
+    def test_concurrent_action_handling(self, page: Page):
+        """
+        Test handling of concurrent user actions
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Try rapid clicking
+        for _ in range(5):
+            page.click('body', position={'x': 100, 'y': 100})
+            page.wait_for_timeout(100)
+            
+        # Page should remain stable
+        assert page.title() != "", "Page broke after rapid clicking"
+        
+    def test_special_character_handling(self, page: Page):
+        """
+        Test handling of special characters in inputs
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        special_chars = [
+            "Test@#$%^&*()",
+            "Tëst wïth ümläüts",
+            "测试中文字符",
+            "🚀 Emoji test 😊",
+            "Test\nwith\nnewlines",
+            "Test\\with\\backslashes"
+        ]
+        
+        input_field = page.locator('input[type="text"]').first
+        
+        if input_field.is_visible():
+            for chars in special_chars:
+                input_field.fill(chars)
+                actual_value = input_field.input_value()
+                
+                # Should handle special characters
+                assert len(actual_value) > 0, f"Failed to handle: {chars}"
+                
+                input_field.clear()
+                
+    def test_memory_leak_prevention(self, page: Page):
+        """
+        Test for potential memory leaks
+        """
+        homepage = HomePage(page)
+        
+        # Get initial memory usage
+        initial_memory = page.evaluate('''() => {
+            if (performance.memory) {
+                return performance.memory.usedJSHeapSize;
+            }
+            return 0;
+        }''')
