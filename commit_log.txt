@@ -39,3 +39,4 @@
 2023-06-02: Create character limit test cases
 2023-06-07: Develop performance metrics testing
 2023-06-13: Add page load time measurements
+2023-06-25: Implement Core Web Vitals tests
