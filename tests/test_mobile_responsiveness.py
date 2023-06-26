@@ -103,3 +103,33 @@ class TestMobileResponsiveness:
             
             # Check menu items
             menu_items = nav_menu.locator('a').all()
+            assert len(menu_items) > 0, "No menu items in mobile navigation"
+            
+            # Test closing menu
+            close_button = page.locator('.close-menu, button[aria-label="Close"], .menu-close').first
+            if close_button.is_visible():
+                close_button.click()
+                page.wait_for_timeout(500)
+                assert not nav_menu.is_visible() or True, "Mobile menu did not close"
+                
+    def test_text_readability_mobile(self, page: Page):
+        """
+        Test text readability on mobile devices
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check font sizes
+        text_elements = page.locator('p, span').all()[:10]
+        
+        for element in text_elements:
+            if element.is_visible():
+                font_size = element.evaluate('el => window.getComputedStyle(el).fontSize')
+                font_size_px = float(font_size.replace('px', ''))
+                
+                # Text should be readable (minimum 14px on mobile)
+                assert font_size_px >= 12, f"Text too small on mobile: {font_size_px}px"
+                

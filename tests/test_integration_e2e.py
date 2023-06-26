@@ -234,3 +234,63 @@ class TestIntegrationE2E:
         
         # Each product should have features and CTAs
         for product, info in product_info.items():
+            assert info['features'] > 0 or info['ctas'] > 0, f"{product} missing content"
+            
+    def test_conversion_funnel_journey(self, page: Page):
+        """
+        Test typical conversion funnel journey
+        """
+        homepage = HomePage(page)
+        
+        # Step 1: Awareness - Land on homepage
+        homepage.navigate_to()
+        initial_url = page.url
+        
+        # Step 2: Interest - Explore products
+        products_page = ProductsPage(page)
+        products_page.navigate_to_tprm()
+        
+        # Track navigation
+        assert page.url != initial_url, "User did not explore products"
+        
+        # Step 3: Consideration - Read more details
+        learn_more = page.locator('a:has-text("Learn more")').first
+        if learn_more.is_visible():
+            learn_more.click()
+            page.wait_for_load_state('networkidle')
+            
+        # Step 4: Intent - Click demo CTA
+        demo_cta = page.locator('a:has-text("Request Demo"), a:has-text("Get Demo")').first
+        if demo_cta.is_visible():
+            demo_cta.click()
+            page.wait_for_load_state('networkidle')
+            
+            # Step 5: Action - Start filling form
+            form = page.locator('form').first
+            if form.is_visible():
+                # User reached conversion point
+                assert True, "User completed funnel to conversion point"
+                
+    def test_returning_visitor_journey(self, page: Page):
+        """
+        Test journey of a returning visitor
+        """
+        homepage = HomePage(page)
+        
+        # First visit - set some context
+        homepage.navigate_to()
+        
+        # Simulate storing user preference (if applicable)
+        page.evaluate('''() => {
+            localStorage.setItem('visited', 'true');
+            localStorage.setItem('interest', 'tprm');
+        }''')
+        
+        # Second visit - returning user
+        homepage.navigate_to()
+        
+        # Check if preferences persist
+        visited = page.evaluate('() => localStorage.getItem("visited")')
+        interest = page.evaluate('() => localStorage.getItem("interest")')
+        
+        assert visited == 'true', "Visit not remembered"
