@@ -238,3 +238,19 @@ class TestNavigationLinks:
         page.go_back()
         page.wait_for_load_state('networkidle')
         
+        assert page.url == initial_url, "Back button did not return to previous page"
+        
+    def test_external_links_open_new_tab(self, page: Page):
+        """
+        Test that external links have target="_blank"
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        external_links = page.locator('a[href^="http"]:not([href*="bitsight.com"])').all()
+        
+        for link in external_links[:5]:
+            target = link.get_attribute('target')
+            # External links should ideally open in new tab
+            if target:
+                assert target == '_blank', f"External link doesn't open in new tab: {link.get_attribute('href')}"

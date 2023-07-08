@@ -238,3 +238,16 @@ class TestPerformanceMetrics:
                     fetchStart: nav.fetchStart,
                     responseEnd: nav.responseEnd,
                     domComplete: nav.domComplete,
+                    loadEventEnd: nav.loadEventEnd
+                };
+            }''')
+            
+            total_time = nav_timing['loadEventEnd'] - nav_timing['fetchStart']
+            print(f"{name} navigation time: {total_time:.2f}ms")
+            
+    def test_ajax_request_performance(self, page: Page):
+        """
+        Test AJAX/XHR request performance
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()

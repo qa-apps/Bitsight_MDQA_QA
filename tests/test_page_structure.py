@@ -71,3 +71,63 @@ class TestPageStructure:
         """
         homepage = HomePage(page)
         homepage.navigate_to()
+        
+        # Check for semantic elements
+        semantic_elements = {
+            'header': page.locator('header'),
+            'nav': page.locator('nav'),
+            'main': page.locator('main'),
+            'footer': page.locator('footer'),
+            'article': page.locator('article'),
+            'section': page.locator('section')
+        }
+        
+        # Header, nav, and footer should be present
+        assert semantic_elements['header'].count() > 0, "No <header> element found"
+        assert semantic_elements['nav'].count() > 0, "No <nav> element found"
+        assert semantic_elements['footer'].count() > 0, "No <footer> element found"
+        
+        # Main content area
+        main_count = semantic_elements['main'].count()
+        assert main_count <= 1, f"Multiple <main> elements found: {main_count}"
+        
+    def test_structured_data_markup(self, page: Page):
+        """
+        Test for structured data (JSON-LD, microdata)
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check for JSON-LD structured data
+        json_ld_scripts = page.locator('script[type="application/ld+json"]').all()
+        
+        for script in json_ld_scripts:
+            content = script.inner_text()
+            try:
+                data = json.loads(content)
+                
+                # Verify basic structure
+                assert '@context' in data, "JSON-LD missing @context"
+                assert '@type' in data or 'type' in data, "JSON-LD missing @type"
+                
+            except json.JSONDecodeError:
+                assert False, "Invalid JSON-LD structured data"
+                
+    def test_navigation_structure(self, page: Page):
+        """
+        Test navigation menu structure and hierarchy
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check main navigation
+        main_nav = page.locator('nav').first
+        assert main_nav.is_visible(), "Main navigation not visible"
+        
+        # Check for list structure in navigation
+        nav_list = main_nav.locator('ul, ol').first
+        if nav_list:
+            nav_items = nav_list.locator('li').all()
+            assert len(nav_items) > 0, "Navigation list has no items"
+            
+            # Each item should have a link
