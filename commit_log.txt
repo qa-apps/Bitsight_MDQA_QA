@@ -42,3 +42,4 @@
 2023-06-25: Implement Core Web Vitals tests
 2023-06-26: Create resource loading tests
 2023-07-08: Add memory usage monitoring
+2023-07-12: Develop cache header validation
