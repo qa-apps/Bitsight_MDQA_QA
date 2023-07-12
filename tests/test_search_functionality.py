@@ -238,3 +238,9 @@ class TestSearchFunctionality:
                     # Click next page
                     next_button = pagination.locator('a:has-text("Next"), button:has-text("Next")').first
                     if next_button and next_button.is_visible():
+                        next_button.click()
+                        page.wait_for_load_state('networkidle')
+                        
+                        # Verify page changed
+                        assert page.url != homepage.base_url, "Pagination did not work"
+                        

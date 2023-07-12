@@ -88,3 +88,63 @@ class TestRegressionFull:
         # Check for features list
         features = products.get_product_features()
         assert len(features) > 0, "No product features found"
+        
+    def test_threat_intelligence_complete(self, page: Page):
+        """
+        Complete regression test for Threat Intelligence page
+        """
+        products = ProductsPage(page)
+        products.navigate_to_threat_intelligence()
+        
+        # Verify correct page
+        assert 'threat' in page.url.lower() or 'intelligence' in page.url.lower(), "Not on Threat Intelligence page"
+        
+        # Verify threat intelligence elements
+        threat_elements = products.verify_threat_intelligence_elements()
+        
+        assert threat_elements.get('underground_forums', False), "Underground forums section missing"
+        assert threat_elements.get('real_time', False), "Real-time monitoring section missing"
+        assert threat_elements.get('ransomware', False), "Ransomware insights section missing"
+        
+    def test_form_submission_validation(self, page: Page):
+        """
+        Test form validation on demo request page
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Look for form elements
+        form = page.locator('form').first
+        if form.is_visible():
+            # Try to submit empty form
+            submit_button = form.locator('button[type="submit"], input[type="submit"]').first
+            if submit_button.is_visible():
+                submit_button.click()
+                
+                # Check for validation messages
+                page.wait_for_timeout(1000)
+                error_messages = page.locator('.error, .invalid, [aria-invalid="true"]').all()
+                assert len(error_messages) > 0 or page.locator(':text("required")').is_visible(), "Form validation not working"
+                
+    def test_search_functionality(self, page: Page):
+        """
+        Test site search functionality if available
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for search button/icon
+        search_trigger = page.locator('[aria-label*="search" i], button:has-text("Search"), .search-icon').first
+        
+        if search_trigger.is_visible():
+            search_trigger.click()
+            page.wait_for_timeout(500)
+            
+            # Find search input
+            search_input = page.locator('input[type="search"], input[placeholder*="search" i]').first
+            if search_input.is_visible():
+                search_input.fill("security")
+                search_input.press("Enter")
