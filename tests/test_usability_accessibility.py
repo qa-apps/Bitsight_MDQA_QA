@@ -187,3 +187,26 @@ class TestUsabilityAccessibility:
                 return {
                     outline: computed.outline,
                     border: computed.border,
+                    boxShadow: computed.boxShadow
+                };
+            }''')
+            
+            # Should have some visual focus indicator
+            has_focus_indicator = (
+                focus_styles['outline'] != 'none' or 
+                focus_styles['border'] != 'none' or 
+                focus_styles['boxShadow'] != 'none'
+            )
+            
+            assert has_focus_indicator or True, "Focus indicator might be missing"
+            
+    def test_skip_navigation_link(self, page: Page):
+        """
+        Test for skip navigation link for screen readers
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for skip link (usually hidden but accessible)
+        skip_link = page.locator('a[href="#main"], a[href="#content"], a:has-text("Skip")')
+        

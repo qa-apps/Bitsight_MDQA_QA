@@ -147,3 +147,63 @@ class TestUIElements:
                     assert close_button.is_visible(), "Modal close button not found"
                     
                     # Close modal
+                    close_button.click()
+                    page.wait_for_timeout(500)
+                    assert not modal.is_visible(), "Modal did not close"
+                    
+    def test_accordion_collapse_elements(self, page: Page):
+        """
+        Test accordion/collapse UI elements if present
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for accordion elements
+        accordions = page.locator('.accordion, [data-accordion], .collapse-trigger, .faq-item').all()
+        
+        for accordion in accordions[:3]:
+            if accordion.is_visible():
+                # Get initial state
+                content = accordion.locator('.content, .panel, .answer').first
+                initial_visible = content.is_visible() if content else False
+                
+                # Click to toggle
+                accordion.click()
+                page.wait_for_timeout(500)
+                
+                # Check state changed
+                if content:
+                    new_visible = content.is_visible()
+                    assert new_visible != initial_visible, "Accordion did not toggle"
+                    
+    def test_tab_navigation_ui(self, page: Page):
+        """
+        Test tab navigation UI components
+        """
+        products_page = ProductsPage(page)
+        products_page.navigate_to_tprm()
+        
+        # Look for tab components
+        tabs = page.locator('[role="tablist"], .tabs, .nav-tabs').first
+        
+        if tabs and tabs.is_visible():
+            tab_buttons = tabs.locator('[role="tab"], .tab').all()
+            
+            for i, tab in enumerate(tab_buttons[:3]):
+                if tab.is_visible():
+                    # Click tab
+                    tab.click()
+                    page.wait_for_timeout(500)
+                    
+                    # Check aria-selected or active class
+                    is_selected = tab.get_attribute('aria-selected') == 'true' or 'active' in (tab.get_attribute('class') or '')
+                    assert is_selected, f"Tab {i} not marked as selected after click"
+                    
+    def test_tooltip_hover_elements(self, page: Page):
+        """
+        Test tooltip UI elements on hover
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for elements with tooltips
