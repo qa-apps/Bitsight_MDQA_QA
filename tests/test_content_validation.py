@@ -279,3 +279,4 @@ class TestContentValidation:
         for indicator in loading_indicators:
             if indicator.is_visible():
                 # Loading indicators should have accessible text
+                aria_label = indicator.get_attribute('aria-label')

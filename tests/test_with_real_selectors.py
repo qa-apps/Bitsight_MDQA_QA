@@ -107,3 +107,63 @@ class TestWithRealSelectors:
     def test_actual_login_button(self, page: Page):
         """
         Test the actual login button URL
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # The ACTUAL login URL is: https://service.bitsighttech.com/
+        login_button = page.locator('a[href="https://service.bitsighttech.com/"]').first
+        
+        assert login_button.is_visible(), "Login button with actual URL not found"
+        
+        # Verify the URL
+        href = login_button.get_attribute('href')
+        assert href == 'https://service.bitsighttech.com/', f"Login URL is {href}, not the expected service.bitsighttech.com"
+        
+    def test_actual_images(self, page: Page):
+        """
+        Test actual images found on the page
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        images = homepage.get_all_real_images()
+        
+        # The page actually has 114 images as discovered
+        all_images_count = page.locator('img').count()
+        print(f"Total images on page: {all_images_count}")
+        
+        # Check first few images
+        for i, img in enumerate(images[:3]):
+            print(f"Image {i+1}: {img['alt'] or 'No alt text'}")
+            print(f"  Source: {img['src']}")
+            
+        # Actual first image is: HP hero wave background
+        if images:
+            first_img = images[0]
+            assert 'Hero' in first_img.get('src', '') or 'hero' in first_img.get('alt', '').lower(), "First image is not the hero background"
+            
+    def test_comparison_generic_vs_real(self, page: Page):
+        """
+        Demonstrate the difference between generic and real selectors
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        print("\n" + "="*60)
+        print("COMPARISON: Generic vs Real Selectors")
+        print("="*60)
+        
+        # What I guessed vs what's actually there
+        comparisons = [
+            {
+                'element': 'Solutions Menu',
+                'generic': 'button:has-text("Solutions")',
+                'reality': 'Not a button - menu structure is different',
+                'found_generic': page.locator('button:has-text("Solutions")').count(),
+                'found_real': page.locator('a:has-text("Solutions")').count()
+            },
+            {
+                'element': 'Demo Button',
+                'generic': 'a:has-text("Request Demo")',
+                'reality': 'a[href*="/demo/security-rating"]',
