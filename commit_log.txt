@@ -45,3 +45,4 @@
 2023-07-12: Develop cache header validation
 2023-07-13: Build cross-browser compatibility tests
 2023-07-21: Add Chromium specific test cases
+2023-08-03: Implement Firefox compatibility tests
