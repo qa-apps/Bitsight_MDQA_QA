@@ -164,3 +164,59 @@ class TestCrossBrowser:
         assert len(loaded_fonts) > 0, "No fonts loaded successfully"
         
         # Check computed font styles
+        heading_font = page.locator('h1').first.evaluate('''el => {
+            const computed = window.getComputedStyle(el);
+            return {
+                fontFamily: computed.fontFamily,
+                fontSize: computed.fontSize,
+                fontWeight: computed.fontWeight
+            };
+        }''')
+        
+        assert heading_font['fontFamily'], "No font family applied to heading"
+        
+    def test_input_compatibility(self, page: Page):
+        """
+        Test form input compatibility across browsers
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Test HTML5 input types support
+        input_support = page.evaluate('''() => {
+            const types = ['email', 'tel', 'url', 'number', 'date', 'color'];
+            const support = {};
+            
+            types.forEach(type => {
+                const input = document.createElement('input');
+                input.type = type;
+                support[type] = input.type === type;
+            });
+            
+            return support;
+        }''')
+        
+        # Modern browsers should support these
+        assert input_support['email'], "Email input not supported"
+        assert input_support['tel'], "Tel input not supported"
+        
+    def test_media_compatibility(self, page: Page):
+        """
+        Test media elements compatibility
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check video/audio support
+        media_support = page.evaluate('''() => {
+            const video = document.createElement('video');
+            const audio = document.createElement('audio');
+            
+            return {
+                video: {
+                    mp4: video.canPlayType('video/mp4'),
+                    webm: video.canPlayType('video/webm'),
+                    ogg: video.canPlayType('video/ogg')
