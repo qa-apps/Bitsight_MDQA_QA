@@ -298,3 +298,49 @@ class TestDataValidation:
                 const content = script.innerHTML;
                 const apiPattern = /https?:\/\/[^\\s"']+api[^\\s"']*/gi;
                 const matches = content.match(apiPattern);
+                if (matches) {
+                    endpoints.push(...matches);
+                }
+            });
+            
+            // Check for data attributes
+            const dataElements = document.querySelectorAll('[data-api], [data-endpoint]');
+            dataElements.forEach(el => {
+                const api = el.getAttribute('data-api') || el.getAttribute('data-endpoint');
+                if (api) endpoints.push(api);
+            });
+            
+            return [...new Set(endpoints)];
+        }''')
+        
+        # Validate API endpoints
+        for endpoint in api_endpoints:
+            # Check for valid URL format
+            if endpoint.startswith('http'):
+                assert re.match(r'https?://[^\s]+', endpoint), f"Invalid API endpoint: {endpoint}"
+                
+                # API endpoints should use HTTPS
+                assert endpoint.startswith('https'), f"API endpoint not using HTTPS: {endpoint}"
+                
+    def test_cookie_data_validation(self, page: Page):
+        """
+        Test cookie data and attributes
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Get cookies
+        cookies = page.context.cookies()
+        
+        for cookie in cookies:
+            # Validate cookie data
+            assert 'name' in cookie, "Cookie missing name"
+            assert 'value' in cookie, "Cookie missing value"
+            assert 'domain' in cookie, "Cookie missing domain"
+            
+            # Security validations
+            if 'bitsight.com' in cookie.get('domain', ''):
+                # Production cookies should be secure
+                assert cookie.get('secure', False) or 'localhost' in cookie['domain'], f"Cookie {cookie['name']} not secure"
+                
+                # Session cookies should be httpOnly
