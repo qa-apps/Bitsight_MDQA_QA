@@ -77,3 +77,63 @@ class TestDropdownMenus:
         
     def test_products_dropdown_complete(self, page: Page):
         """
+        Complete test of Products dropdown menu functionality
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Find and click Products menu
+        products_button = page.locator('button:has-text("Products"), a:has-text("Products")').first
+        assert products_button.is_visible(), "Products menu button not found"
+        
+        products_button.click()
+        page.wait_for_timeout(500)
+        
+        # Find dropdown
+        dropdown = page.locator('[role="menu"], .dropdown-menu').nth(1) if page.locator('[role="menu"]').count() > 1 else page.locator('[role="menu"], .dropdown-menu').first
+        
+        if dropdown.is_visible():
+            # Count product items
+            product_items = dropdown.locator('a').all()
+            assert len(product_items) > 0, "Products dropdown is empty"
+            
+            # Test each product link
+            for i, item in enumerate(product_items[:3]):  # Test first 3 to avoid timeout
+                homepage.navigate_to()
+                products_button.click()
+                page.wait_for_timeout(500)
+                
+                # Re-query items as DOM might change
+                current_items = dropdown.locator('a').all()
+                if i < len(current_items):
+                    item_text = current_items[i].text_content()
+                    item_href = current_items[i].get_attribute('href')
+                    
+                    # Verify link properties
+                    assert item_text, f"Product item {i} has no text"
+                    assert item_href, f"Product item {i} has no href"
+                    
+                    # Click and verify navigation
+                    current_items[i].click()
+                    page.wait_for_load_state('networkidle')
+                    
+                    # Should navigate to product page
+                    assert page.url != homepage.base_url, f"Product link '{item_text}' did not navigate"
+                    
+    def test_resources_dropdown_complete(self, page: Page):
+        """
+        Complete test of Resources dropdown menu functionality  
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Find Resources menu
+        resources_button = page.locator('button:has-text("Resources"), a:has-text("Resources")').first
+        assert resources_button.is_visible(), "Resources menu not found"
+        
+        # Open dropdown
+        resources_button.click()
+        page.wait_for_timeout(500)
+        
+        # Find dropdown content
+        dropdown = page.locator('[role="menu"], .dropdown-menu').nth(2) if page.locator('[role="menu"]').count() > 2 else page.locator('[role="menu"], .dropdown-menu').first

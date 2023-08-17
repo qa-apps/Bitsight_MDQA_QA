@@ -298,3 +298,10 @@ class TestErrorHandling:
             }
             return 0;
         }''')
+        
+        # Perform multiple navigations
+        for _ in range(5):
+            homepage.navigate_to()
+            page.wait_for_load_state('networkidle')
+            
+        # Get final memory usage
