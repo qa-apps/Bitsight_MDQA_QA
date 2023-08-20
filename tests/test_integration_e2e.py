@@ -294,3 +294,25 @@ class TestIntegrationE2E:
         interest = page.evaluate('() => localStorage.getItem("interest")')
         
         assert visited == 'true', "Visit not remembered"
+        assert interest == 'tprm', "User interest not remembered"
+        
+        # Navigate directly to area of interest
+        if interest == 'tprm':
+            products_page = ProductsPage(page)
+            products_page.navigate_to_tprm()
+            
+        # Clear test data
+        page.evaluate('() => localStorage.clear()')
+        
+    def test_cross_browser_journey(self, page: Page):
+        """
+        Test user journey across different browser contexts
+        """
+        homepage = HomePage(page)
+        
+        # Journey in current browser
+        homepage.navigate_to()
+        
+        # Get browser info
+        browser_info = page.evaluate('''() => {
+            return {

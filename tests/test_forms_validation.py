@@ -100,3 +100,63 @@ class TestFormsValidation:
                 phone_field.fill(phone)
                 phone_field.blur()
                 page.wait_for_timeout(200)
+                
+                # Validation depends on implementation
+                phone_field.clear()
+                
+    def test_form_field_character_limits(self, page: Page):
+        """
+        Test character limits on form fields
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Test text input limits
+        text_fields = page.locator('input[type="text"], input[type="email"]').all()
+        
+        for field in text_fields[:3]:
+            if field.is_visible():
+                # Try to input very long string
+                long_text = 'a' * 500
+                field.fill(long_text)
+                
+                # Get actual value
+                actual_value = field.input_value()
+                
+                # Check if there's a max length
+                max_length = field.get_attribute('maxlength')
+                if max_length:
+                    assert len(actual_value) <= int(max_length), f"Field exceeded maxlength of {max_length}"
+                    
+                field.clear()
+                
+    def test_dropdown_selection(self, page: Page):
+        """
+        Test dropdown/select field functionality
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Find select elements
+        selects = page.locator('select').all()
+        
+        for select in selects:
+            if select.is_visible():
+                # Get options
+                options = select.locator('option').all()
+                
+                if len(options) > 1:
+                    # Select second option
+                    select.select_option(index=1)
+                    
+                    # Verify selection
+                    selected_value = select.input_value()
+                    assert selected_value, "No value selected from dropdown"
+                    
+    def test_checkbox_and_radio_buttons(self, page: Page):
