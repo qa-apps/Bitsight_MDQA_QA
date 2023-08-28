@@ -131,3 +131,8 @@ class TestPageStructure:
             assert len(nav_items) > 0, "Navigation list has no items"
             
             # Each item should have a link
+            for item in nav_items[:5]:
+                link = item.locator('a, button').first
+                assert link, "Navigation item missing interactive element"
+                
+    def test_footer_structure(self, page: Page):

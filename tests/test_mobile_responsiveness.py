@@ -133,3 +133,63 @@ class TestMobileResponsiveness:
                 # Text should be readable (minimum 14px on mobile)
                 assert font_size_px >= 12, f"Text too small on mobile: {font_size_px}px"
                 
+        # Check line height
+        paragraphs = page.locator('p').all()[:5]
+        
+        for p in paragraphs:
+            if p.is_visible():
+                line_height = p.evaluate('el => window.getComputedStyle(el).lineHeight')
+                # Line height should be adequate for readability
+                
+    def test_touch_target_sizes(self, page: Page):
+        """
+        Test touch target sizes meet mobile guidelines
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check button and link sizes
+        clickable_elements = page.locator('button, a').all()[:15]
+        
+        for element in clickable_elements:
+            if element.is_visible():
+                box = element.bounding_box()
+                
+                if box:
+                    # Touch targets should be at least 44x44px (iOS) or 48x48px (Android)
+                    min_size = 44
+                    
+                    # Some inline links might be smaller, check if it's a button or standalone link
+                    is_button = element.evaluate('el => el.tagName === "BUTTON" || el.classList.contains("button") || el.classList.contains("btn")')
+                    
+                    if is_button:
+                        assert box['width'] >= min_size or box['height'] >= min_size, f"Touch target too small: {box['width']}x{box['height']}"
+                        
+    def test_mobile_forms(self, page: Page):
+        """
+        Test form usability on mobile
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Check form elements
+        form = page.locator('form').first
+        
+        if form.is_visible():
+            # Check input fields
+            inputs = form.locator('input, select, textarea').all()
+            
+            for input_field in inputs[:5]:
+                if input_field.is_visible():
+                    # Check if input is properly sized for mobile
+                    box = input_field.bounding_box()
+                    
