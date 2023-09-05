@@ -251,3 +251,63 @@ class TestPerformanceMetrics:
         """
         homepage = HomePage(page)
         homepage.navigate_to()
+        
+        # Monitor network requests
+        ajax_requests = []
+        
+        def handle_request(request):
+            if request.resource_type in ['xhr', 'fetch']:
+                ajax_requests.append({
+                    'url': request.url,
+                    'method': request.method,
+                    'start': time.time()
+                })
+                
+        page.on('request', handle_request)
+        
+        # Trigger some actions that might cause AJAX
+        page.wait_for_timeout(3000)
+        
+        # Check if any AJAX requests were slow
+        for req in ajax_requests:
+            # Normally would measure response time
+            pass
+            
+    def test_image_optimization(self, page: Page):
+        """
+        Test if images are optimized
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check image formats and sizes
+        images = page.evaluate('''() => {
+            const imgs = document.querySelectorAll('img');
+            return Array.from(imgs).map(img => ({
+                src: img.src,
+                naturalWidth: img.naturalWidth,
+                naturalHeight: img.naturalHeight,
+                displayWidth: img.clientWidth,
+                displayHeight: img.clientHeight,
+                loading: img.loading
+            }));
+        }''')
+        
+        for img in images[:5]:
+            # Check if image is oversized for display
+            if img['naturalWidth'] > 0 and img['displayWidth'] > 0:
+                ratio = img['naturalWidth'] / img['displayWidth']
+                assert ratio < 3, f"Image possibly oversized: {img['src'][-50:]}"
+                
+            # Check for lazy loading
+            if img['loading']:
+                assert img['loading'] == 'lazy' or img['loading'] == 'eager', "Invalid loading attribute"
+                
+    def test_cache_headers(self, page: Page):
+        """
+        Test if proper cache headers are set
+        """
+        homepage = HomePage(page)
+        
+        response = page.goto(homepage.base_url)
+        

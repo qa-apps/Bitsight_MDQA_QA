@@ -148,3 +148,13 @@ class TestRegressionFull:
             if search_input.is_visible():
                 search_input.fill("security")
                 search_input.press("Enter")
+                
+                page.wait_for_load_state('networkidle')
+                
+                # Verify search results or navigation
+                assert page.url != homepage.base_url, "Search did not navigate to results"
+                
+    def test_responsive_breakpoints(self, page: Page):
+        """
+        Test responsive design at different breakpoints
+        """
