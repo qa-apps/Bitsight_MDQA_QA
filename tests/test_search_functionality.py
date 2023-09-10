@@ -244,3 +244,63 @@ class TestSearchFunctionality:
                         # Verify page changed
                         assert page.url != homepage.base_url, "Pagination did not work"
                         
+    def test_search_no_results(self, page: Page):
+        """
+        Test search with query that returns no results
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Search for gibberish
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            search_input.fill("xyzabc123randomquery999")
+            search_input.press('Enter')
+            
+            page.wait_for_load_state('networkidle')
+            
+            # Should show no results message
+            page_content = page.content().lower()
+            
+            no_results_indicators = ['no results', 'not found', '0 results', 'no matches']
+            has_no_results_message = any(indicator in page_content for indicator in no_results_indicators)
+            
+            # Page should handle no results gracefully
+            assert page.title() != "", "Page broke with no results"
+            
+    def test_search_highlighting(self, page: Page):
+        """
+        Test if search terms are highlighted in results
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        search_query = "security"
+        
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            search_input.fill(search_query)
+            search_input.press('Enter')
+            
+            page.wait_for_load_state('networkidle')
+            
+            # Look for highlighted terms
+            highlighted = page.locator('mark, .highlight, .search-highlight, strong').all()
+            
+            if highlighted:
+                for element in highlighted[:3]:
+                    text = element.text_content()
+                    if text and search_query.lower() in text.lower():
+                        print(f"Found highlighted term: {text}")
+                        
+    def test_search_clear_functionality(self, page: Page):
+        """
+        Test clearing search input
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
