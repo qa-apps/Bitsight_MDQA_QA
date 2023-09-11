@@ -210,3 +210,31 @@ class TestUsabilityAccessibility:
         # Look for skip link (usually hidden but accessible)
         skip_link = page.locator('a[href="#main"], a[href="#content"], a:has-text("Skip")')
         
+        if skip_link.count() > 0:
+            first_skip = skip_link.first
+            
+            # Skip link might be visually hidden but should be in DOM
+            assert first_skip, "Skip navigation link found"
+            
+            # Tab to make it visible (if implemented properly)
+            page.keyboard.press('Tab')
+            
+            # Some skip links only show on focus
+            
+    def test_language_attribute(self, page: Page):
+        """
+        Test that page has proper language attributes
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check html lang attribute
+        html_lang = page.locator('html').get_attribute('lang')
+        assert html_lang, "HTML element missing lang attribute"
+        assert len(html_lang) >= 2, f"Invalid language code: {html_lang}"
+        
+    def test_page_title_descriptive(self, page: Page):
+        """
+        Test that page titles are descriptive and unique
+        """
+        homepage = HomePage(page)

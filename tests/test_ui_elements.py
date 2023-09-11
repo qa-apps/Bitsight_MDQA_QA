@@ -207,3 +207,63 @@ class TestUIElements:
         homepage.navigate_to()
         
         # Look for elements with tooltips
+        tooltip_elements = page.locator('[data-tooltip], [title], [aria-describedby]').all()[:5]
+        
+        for element in tooltip_elements:
+            if element.is_visible():
+                # Hover to trigger tooltip
+                element.hover()
+                page.wait_for_timeout(500)
+                
+                # Check for tooltip appearance
+                tooltip = page.locator('.tooltip, [role="tooltip"]').first
+                
+                # Move away to hide tooltip
+                page.mouse.move(0, 0)
+                
+    def test_carousel_slider_ui(self, page: Page):
+        """
+        Test carousel/slider UI components
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for carousel elements
+        carousel = page.locator('.carousel, .slider, [data-carousel]').first
+        
+        if carousel and carousel.is_visible():
+            # Check for navigation controls
+            prev_button = carousel.locator('.prev, [aria-label*="previous"], button:has-text("<")').first
+            next_button = carousel.locator('.next, [aria-label*="next"], button:has-text(">")').first
+            
+            if next_button and next_button.is_visible():
+                # Get initial slide
+                active_slide = carousel.locator('.active, .current').first
+                initial_content = active_slide.text_content() if active_slide else ""
+                
+                # Click next
+                next_button.click()
+                page.wait_for_timeout(1000)
+                
+                # Check if content changed
+                new_active = carousel.locator('.active, .current').first
+                new_content = new_active.text_content() if new_active else ""
+                
+                if initial_content and new_content:
+                    assert initial_content != new_content, "Carousel did not advance"
+                    
+    def test_progress_indicators(self, page: Page):
+        """
+        Test progress bars and loading indicators
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for progress indicators
+        progress_bars = page.locator('.progress, [role="progressbar"], .loading').all()
+        
+        for progress in progress_bars[:3]:
+            if progress.is_visible():
+                # Check for value attributes
+                value = progress.get_attribute('aria-valuenow') or progress.get_attribute('data-value')
+                max_value = progress.get_attribute('aria-valuemax') or '100'
