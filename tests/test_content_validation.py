@@ -280,3 +280,63 @@ class TestContentValidation:
             if indicator.is_visible():
                 # Loading indicators should have accessible text
                 aria_label = indicator.get_attribute('aria-label')
+                text_content = indicator.text_content()
+                
+                has_accessible_text = aria_label or text_content
+                
+    def test_form_field_labels(self, page: Page):
+        """
+        Test form field labels and placeholders
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Check form fields
+        form_fields = page.locator('input, select, textarea').all()
+        
+        for field in form_fields[:10]:
+            if field.is_visible():
+                field_id = field.get_attribute('id')
+                field_name = field.get_attribute('name')
+                placeholder = field.get_attribute('placeholder')
+                aria_label = field.get_attribute('aria-label')
+                
+                # Field should have some identifying text
+                has_label = False
+                
+                if field_id:
+                    label = page.locator(f'label[for="{field_id}"]').first
+                    if label and label.is_visible():
+                        label_text = label.text_content()
+                        assert label_text and len(label_text) > 0, f"Field {field_name} has empty label"
+                        has_label = True
+                        
+                # If no label, should have placeholder or aria-label
+                if not has_label:
+                    assert placeholder or aria_label, f"Field {field_name} has no label, placeholder, or aria-label"
+                    
+    def test_date_format_consistency(self, page: Page):
+        """
+        Test date format consistency across the site
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Find dates on the page
+        date_patterns = [
+            r'\d{1,2}/\d{1,2}/\d{4}',  # MM/DD/YYYY
+            r'\d{4}-\d{2}-\d{2}',      # YYYY-MM-DD
+            r'\w+ \d{1,2}, \d{4}',     # Month DD, YYYY
+            r'\d{1,2} \w+ \d{4}'       # DD Month YYYY
+        ]
+        
+        page_content = page.content()
+        found_dates = []
+        
+        for pattern in date_patterns:
+            matches = re.findall(pattern, page_content)
+            if matches:
+                found_dates.extend(matches)

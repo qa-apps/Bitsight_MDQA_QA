@@ -220,3 +220,13 @@ class TestCrossBrowser:
                     mp4: video.canPlayType('video/mp4'),
                     webm: video.canPlayType('video/webm'),
                     ogg: video.canPlayType('video/ogg')
+                },
+                audio: {
+                    mp3: audio.canPlayType('audio/mpeg'),
+                    ogg: audio.canPlayType('audio/ogg'),
+                    wav: audio.canPlayType('audio/wav')
+                }
+            };
+        }''')
+        
+        # At least one format should be supported

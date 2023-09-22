@@ -167,3 +167,21 @@ class TestWithRealSelectors:
                 'element': 'Demo Button',
                 'generic': 'a:has-text("Request Demo")',
                 'reality': 'a[href*="/demo/security-rating"]',
+                'found_generic': page.locator('a:has-text("Request Demo")').count(),
+                'found_real': page.locator('a[href*="/demo/security-rating"]').count()
+            },
+            {
+                'element': 'Header',
+                'generic': 'header, nav',
+                'reality': 'header.site-header.site-header--transparent',
+                'found_generic': page.locator('header').count(),
+                'found_real': page.locator('header.site-header').count()
+            }
+        ]
+        
+        for comp in comparisons:
+            print(f"\n{comp['element']}:")
+            print(f"  Generic selector: {comp['generic']}")
+            print(f"  Real selector: {comp['reality']}")
+            print(f"  Generic found: {comp['found_generic']} elements")
+            print(f"  Real found: {comp['found_real']} elements")
