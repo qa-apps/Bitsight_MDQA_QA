@@ -137,3 +137,25 @@ class TestDropdownMenus:
         
         # Find dropdown content
         dropdown = page.locator('[role="menu"], .dropdown-menu').nth(2) if page.locator('[role="menu"]').count() > 2 else page.locator('[role="menu"], .dropdown-menu').first
+        
+        if dropdown.is_visible():
+            # Get resource categories
+            categories = dropdown.locator('.category, .section, h3, h4').all()
+            
+            # Get resource links
+            resource_links = dropdown.locator('a').all()
+            assert len(resource_links) > 0, "No links in Resources dropdown"
+            
+            # Verify link diversity (different types of resources)
+            link_texts = [link.text_content() for link in resource_links[:10]]
+            
+            # Common resource types to check for
+            resource_types = ['blog', 'guide', 'whitepaper', 'case', 'webinar', 'report', 'research']
+            found_types = []
+            
+            for link_text in link_texts:
+                if link_text:
+                    text_lower = link_text.lower()
+                    for resource_type in resource_types:
+                        if resource_type in text_lower:
+                            found_types.append(resource_type)

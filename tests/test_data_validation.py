@@ -344,3 +344,63 @@ class TestDataValidation:
                 assert cookie.get('secure', False) or 'localhost' in cookie['domain'], f"Cookie {cookie['name']} not secure"
                 
                 # Session cookies should be httpOnly
+                if 'session' in cookie['name'].lower():
+                    assert cookie.get('httpOnly', False), f"Session cookie {cookie['name']} not httpOnly"
+                    
+            # Check expiration
+            if 'expires' in cookie:
+                assert cookie['expires'] > 0, f"Cookie {cookie['name']} has invalid expiration"
+                
+    def test_localstorage_data(self, page: Page):
+        """
+        Test localStorage data if used
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Check localStorage
+        storage_data = page.evaluate('''() => {
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                data[key] = value;
+            }
+            return data;
+        }''')
+        
+        # Validate stored data
+        for key, value in storage_data.items():
+            # Check for sensitive data that shouldn't be in localStorage
+            sensitive_patterns = ['password', 'token', 'secret', 'api_key', 'credit']
+            
+            for pattern in sensitive_patterns:
+                assert pattern not in key.lower(), f"Potentially sensitive data in localStorage: {key}"
+                assert pattern not in str(value).lower(), f"Potentially sensitive value in localStorage for {key}"
+                
+            # Validate JSON data if applicable
+            if value and (value.startswith('{') or value.startswith('[')):
+                try:
+                    json.loads(value)
+                except json.JSONDecodeError:
+                    print(f"Invalid JSON in localStorage for key: {key}")
+                    
+    def test_data_consistency_across_pages(self, page: Page):
+        """
+        Test data consistency across different pages
+        """
+        homepage = HomePageReal(page)
+        
+        # Collect data from multiple pages
+        page_data = {}
+        
+        test_pages = [
+            '/',
+            '/products/third-party-risk-management',
+            '/resources'
+        ]
+        
+        for page_path in test_pages:
+            homepage.navigate_to(page_path)
+            page.wait_for_load_state('networkidle')
+            
