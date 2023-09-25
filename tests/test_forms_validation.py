@@ -160,3 +160,18 @@ class TestFormsValidation:
                     assert selected_value, "No value selected from dropdown"
                     
     def test_checkbox_and_radio_buttons(self, page: Page):
+        """
+        Test checkbox and radio button functionality
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Test checkboxes
+        checkboxes = page.locator('input[type="checkbox"]').all()
+        
+        for checkbox in checkboxes[:3]:
+            if checkbox.is_visible():
+                # Check the checkbox

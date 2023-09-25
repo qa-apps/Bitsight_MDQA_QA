@@ -305,3 +305,56 @@ class TestErrorHandling:
             page.wait_for_load_state('networkidle')
             
         # Get final memory usage
+        final_memory = page.evaluate('''() => {
+            if (performance.memory) {
+                return performance.memory.usedJSHeapSize;
+            }
+            return 0;
+        }''')
+        
+        if initial_memory > 0 and final_memory > 0:
+            memory_increase = (final_memory - initial_memory) / 1024 / 1024  # Convert to MB
+            
+            # Memory increase should be reasonable
+            assert memory_increase < 50, f"Potential memory leak: {memory_increase:.2f}MB increase"
+            
+    def test_error_recovery(self, page: Page):
+        """
+        Test error recovery capabilities
+        """
+        homepage = HomePage(page)
+        
+        # Try to break something
+        try:
+            page.evaluate('() => { throw new Error("Test error"); }')
+        except:
+            pass
+            
+        # Page should still work
+        homepage.navigate_to()
+        assert homepage.is_homepage_loaded(), "Page failed to recover from error"
+        
+    def test_api_error_handling(self, page: Page):
+        """
+        Test handling of API errors
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Monitor network failures
+        failed_requests = []
+        
+        def handle_request_failed(request):
+            failed_requests.append(request.url)
+            
+        page.on('requestfailed', handle_request_failed)
+        
+        # Navigate and interact
+        page.wait_for_timeout(3000)
+        
+        # Check if any critical resources failed
+        critical_failures = [req for req in failed_requests if 'bitsight.com' in req]
+        
+        # Should handle failures gracefully
+        if critical_failures:
+            print(f"Warning: {len(critical_failures)} requests failed")
