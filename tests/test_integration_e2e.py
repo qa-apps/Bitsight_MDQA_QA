@@ -316,3 +316,55 @@ class TestIntegrationE2E:
         # Get browser info
         browser_info = page.evaluate('''() => {
             return {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled
+            };
+        }''')
+        
+        assert browser_info['cookieEnabled'], "Cookies not enabled"
+        
+        # Test journey with different viewport sizes
+        viewports = [
+            {'width': 1920, 'height': 1080},
+            {'width': 768, 'height': 1024},
+            {'width': 375, 'height': 667}
+        ]
+        
+        for viewport in viewports:
+            page.set_viewport_size(viewport)
+            homepage.navigate_to()
+            
+            # Verify page works at each size
+            assert homepage.is_visible(homepage.hero_title), f"Page broken at {viewport['width']}x{viewport['height']}"
+            
+    def test_error_recovery_journey(self, page: Page):
+        """
+        Test user journey with error recovery
+        """
+        homepage = HomePage(page)
+        
+        # Start normal journey
+        homepage.navigate_to()
+        
+        # Simulate error - navigate to 404
+        page.goto(f"{homepage.base_url}/nonexistent-page")
+        
+        # User should be able to recover
+        home_link = page.locator('a[href="/"], a:has-text("Home")').first
+        if home_link.is_visible():
+            home_link.click()
+            page.wait_for_load_state('networkidle')
+            
+            # Verify recovered to homepage
+            assert homepage.is_homepage_loaded(), "Could not recover from 404"
+            
+        # Continue journey normally
+        products_page = ProductsPage(page)
+        products_page.navigate_to_tprm()
+        
+        # Verify can continue after error
+        assert 'products' in page.url or 'solutions' in page.url, "Journey broken after error"
+        
+    def test_performance_during_journey(self, page: Page):
+        """
