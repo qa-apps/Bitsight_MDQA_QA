@@ -193,3 +193,44 @@ class TestMobileResponsiveness:
                     # Check if input is properly sized for mobile
                     box = input_field.bounding_box()
                     
+                    if box:
+                        # Inputs should be wide enough for mobile
+                        assert box['width'] > 200, f"Input field too narrow on mobile: {box['width']}px"
+                        
+                        # Height should be touch-friendly
+                        assert box['height'] >= 35, f"Input field too short on mobile: {box['height']}px"
+                        
+    def test_mobile_images(self, page: Page):
+        """
+        Test image responsiveness on mobile
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        images = page.locator('img').all()[:10]
+        
+        for img in images:
+            if img.is_visible():
+                # Check image dimensions
+                box = img.bounding_box()
+                
+                if box:
+                    # Images shouldn't exceed viewport width
+                    assert box['width'] <= 375, f"Image wider than viewport: {box['width']}px"
+                    
+                    # Check for responsive images
+                    srcset = img.get_attribute('srcset')
+                    sizes = img.get_attribute('sizes')
+                    
+                    # Modern responsive images should use srcset
+                    if srcset:
+                        print("Image uses responsive srcset")
+                        
+    def test_mobile_performance(self, page: Page):
+        """
+        Test performance on mobile viewport
+        """
+        # Set mobile viewport with throttled network
