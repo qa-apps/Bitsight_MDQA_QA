@@ -136,3 +136,44 @@ class TestPageStructure:
                 assert link, "Navigation item missing interactive element"
                 
     def test_footer_structure(self, page: Page):
+        """
+        Test footer structure and content
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        footer = page.locator('footer').first
+        assert footer.is_visible(), "Footer not visible"
+        
+        # Check for common footer elements
+        footer_sections = footer.locator('div, section, nav').all()
+        assert len(footer_sections) > 0, "Footer has no content sections"
+        
+        # Check for copyright
+        copyright_text = footer.text_content()
+        assert '©' in copyright_text or 'copyright' in copyright_text.lower(), "Copyright information missing"
+        
+        # Check for footer links
+        footer_links = footer.locator('a').all()
+        assert len(footer_links) > 5, "Footer has too few links"
+        
+        # Check for common footer pages
+        footer_text = copyright_text.lower()
+        common_pages = ['privacy', 'terms', 'contact']
+        found_pages = [page for page in common_pages if page in footer_text]
+        assert len(found_pages) > 0, "Footer missing common legal/contact links"
+        
+    def test_content_hierarchy(self, page: Page):
+        """
+        Test content hierarchy and organization
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check heading hierarchy
+        h1_elements = page.locator('h1').all()
+        h2_elements = page.locator('h2').all()
+        h3_elements = page.locator('h3').all()
+        
+        assert len(h1_elements) == 1, f"Page should have exactly one H1, found {len(h1_elements)}"
+        assert len(h2_elements) > 0, "Page should have H2 elements"
