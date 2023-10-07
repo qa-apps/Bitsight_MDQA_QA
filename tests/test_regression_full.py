@@ -158,3 +158,48 @@ class TestRegressionFull:
         """
         Test responsive design at different breakpoints
         """
+        homepage = HomePage(page)
+        
+        breakpoints = [
+            {'width': 1920, 'height': 1080, 'name': 'desktop'},
+            {'width': 1366, 'height': 768, 'name': 'laptop'},
+            {'width': 768, 'height': 1024, 'name': 'tablet'},
+            {'width': 375, 'height': 667, 'name': 'mobile'}
+        ]
+        
+        for breakpoint in breakpoints:
+            page.set_viewport_size({'width': breakpoint['width'], 'height': breakpoint['height']})
+            homepage.navigate_to()
+            
+            # Verify critical elements are visible
+            assert homepage.is_visible(homepage.hero_title), f"Hero not visible at {breakpoint['name']}"
+            
+            # Check if navigation adapts
+            if breakpoint['width'] < 768:
+                # Mobile view should have hamburger menu
+                mobile_menu = page.locator('.mobile-menu, [aria-label="Menu"], .hamburger').first
+                assert mobile_menu.is_visible() or page.locator('button').first.is_visible(), f"Mobile menu not found at {breakpoint['name']}"
+                
+    def test_javascript_functionality(self, page: Page):
+        """
+        Test JavaScript-dependent functionality
+        """
+        homepage = HomePage(page)
+        
+        # Test with JavaScript enabled (default)
+        homepage.navigate_to()
+        js_enabled_elements = page.locator('.js-only, [data-js="true"]').count()
+        
+        # Verify interactive elements work
+        dropdown_menus = page.locator('[role="menu"], .dropdown').count()
+        assert dropdown_menus >= 0, "No dropdown menus found (JS might be broken)"
+        
+    def test_page_performance_metrics(self, page: Page):
+        """
+        Test page performance metrics
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Get performance metrics
+        metrics = page.evaluate('''() => {

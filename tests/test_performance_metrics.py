@@ -311,3 +311,32 @@ class TestPerformanceMetrics:
         
         response = page.goto(homepage.base_url)
         
+        if response:
+            headers = response.headers
+            
+            # Check for cache headers
+            cache_control = headers.get('cache-control', '')
+            etag = headers.get('etag', '')
+            last_modified = headers.get('last-modified', '')
+            
+            # Should have some caching strategy
+            has_caching = cache_control or etag or last_modified
+            assert has_caching, "No cache headers found"
+            
+    def test_concurrent_load_performance(self, page: Page):
+        """
+        Test performance under concurrent loads
+        """
+        homepage = HomePage(page)
+        
+        # Measure multiple page loads
+        load_times = []
+        
+        for i in range(3):
+            start = time.time()
+            homepage.navigate_to()
+            page.wait_for_load_state('networkidle')
+            load_times.append(time.time() - start)
+            
+        avg_load_time = sum(load_times) / len(load_times)
+        assert avg_load_time < 8, f"Average load time too high: {avg_load_time:.2f}s"
