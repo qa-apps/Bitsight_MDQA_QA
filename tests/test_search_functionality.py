@@ -304,3 +304,49 @@ class TestSearchFunctionality:
         homepage = HomePageReal(page)
         homepage.navigate_to()
         
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            search_input = search_form.locator('input').first
+            
+            # Enter search term
+            search_input.fill("test search")
+            assert search_input.input_value() == "test search", "Input not filled"
+            
+            # Look for clear button
+            clear_button = search_form.locator('button:has-text("Clear"), .clear-search').first
+            
+            if clear_button and clear_button.is_visible():
+                clear_button.click()
+                assert search_input.input_value() == "", "Search not cleared"
+            else:
+                # Use keyboard shortcut
+                search_input.select_all()
+                search_input.press('Delete')
+                assert search_input.input_value() == "", "Search not cleared with keyboard"
+                
+    def test_search_history(self, page: Page):
+        """
+        Test if search history is maintained
+        """
+        homepage = HomePageReal(page)
+        homepage.navigate_to()
+        
+        # Perform multiple searches
+        searches = ['risk', 'security', 'compliance']
+        
+        search_form = page.locator('#views-exposed-form-search-search-page').first
+        
+        if search_form.is_visible():
+            for term in searches:
+                search_input = search_form.locator('input').first
+                search_input.fill(term)
+                search_input.press('Enter')
+                page.wait_for_load_state('domcontentloaded')
+                
+                # Go back
+                page.go_back()
+                
+            # Check if we can navigate through search history
+            page.go_forward()
+            assert page.url != homepage.base_url, "Search history navigation failed"
