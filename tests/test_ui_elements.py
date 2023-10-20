@@ -267,3 +267,63 @@ class TestUIElements:
                 # Check for value attributes
                 value = progress.get_attribute('aria-valuenow') or progress.get_attribute('data-value')
                 max_value = progress.get_attribute('aria-valuemax') or '100'
+                
+                # Progress should have valid values
+                if value:
+                    assert 0 <= float(value) <= float(max_value), "Invalid progress value"
+                    
+    def test_badges_and_labels(self, page: Page):
+        """
+        Test badges and label UI elements
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for badges and labels
+        badges = page.locator('.badge, .label, .tag, [class*="badge"]').all()[:5]
+        
+        for badge in badges:
+            if badge.is_visible():
+                # Check badge has content
+                content = badge.text_content()
+                assert content and len(content.strip()) > 0, "Badge has no content"
+                
+                # Check badge is styled appropriately
+                bg_color = badge.evaluate('el => window.getComputedStyle(el).backgroundColor')
+                assert bg_color != 'rgba(0, 0, 0, 0)', "Badge has no background color"
+                
+    def test_icon_elements(self, page: Page):
+        """
+        Test icon elements and their rendering
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for icon elements
+        icons = page.locator('i[class*="icon"], svg, .icon, [class*="fa-"]').all()[:10]
+        
+        for icon in icons:
+            if icon.is_visible():
+                # Check icon has proper size
+                size = icon.bounding_box()
+                if size:
+                    assert size['width'] > 0 and size['height'] > 0, "Icon has no dimensions"
+                    
+                # For font icons, check they have content or class
+                if icon.evaluate('el => el.tagName.toLowerCase()') == 'i':
+                    classes = icon.get_attribute('class')
+                    assert classes and len(classes) > 0, "Icon element has no classes"
+                    
+    def test_breadcrumb_ui(self, page: Page):
+        """
+        Test breadcrumb navigation UI
+        """
+        products_page = ProductsPage(page)
+        products_page.navigate_to_tprm()
+        
+        breadcrumbs = page.locator('nav[aria-label="breadcrumb"], .breadcrumb, ol.breadcrumb').first
+        
+        if breadcrumbs and breadcrumbs.is_visible():
+            items = breadcrumbs.locator('li, .breadcrumb-item').all()
+            
+            for i, item in enumerate(items):

@@ -238,3 +238,32 @@ class TestUsabilityAccessibility:
         Test that page titles are descriptive and unique
         """
         homepage = HomePage(page)
+        products_page = ProductsPage(page)
+        
+        # Check homepage title
+        homepage.navigate_to()
+        home_title = page.title()
+        assert home_title, "Homepage missing title"
+        assert len(home_title) > 10, "Homepage title too short"
+        
+        # Check product page title
+        products_page.navigate_to_tprm()
+        product_title = page.title()
+        assert product_title, "Product page missing title"
+        assert product_title != home_title, "Page titles should be unique"
+        
+    def test_error_messages_clear(self, page: Page):
+        """
+        Test that error messages are clear and accessible
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Try to submit empty form
+        submit_button = page.locator('button[type="submit"], input[type="submit"]').first
+        
+        if submit_button and submit_button.is_visible():
+            submit_button.click()
