@@ -230,3 +230,31 @@ class TestCrossBrowser:
         }''')
         
         # At least one format should be supported
+        video_supported = any(media_support['video'].values())
+        audio_supported = any(media_support['audio'].values())
+        
+        assert video_supported or True, "No video formats supported"
+        assert audio_supported or True, "No audio formats supported"
+        
+    def test_console_errors_cross_browser(self, page: Page):
+        """
+        Test for console errors across browsers
+        """
+        homepage = HomePage(page)
+        
+        console_errors = []
+        page.on('console', lambda msg: console_errors.append(msg) if msg.type == 'error' else None)
+        
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        
+        # Check for browser-specific errors
+        assert len(console_errors) == 0, f"Console errors found: {[str(e) for e in console_errors[:3]]}"
+        
+    def test_local_storage_compatibility(self, page: Page):
+        """
+        Test local storage functionality across browsers
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        

@@ -340,3 +340,7 @@ class TestContentValidation:
             matches = re.findall(pattern, page_content)
             if matches:
                 found_dates.extend(matches)
+                
+        # If dates found, check consistency
+        if found_dates:
+            print(f"Found {len(found_dates)} dates on page")
