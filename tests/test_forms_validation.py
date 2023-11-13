@@ -175,3 +175,9 @@ class TestFormsValidation:
         for checkbox in checkboxes[:3]:
             if checkbox.is_visible():
                 # Check the checkbox
+                checkbox.check()
+                assert checkbox.is_checked(), "Checkbox not checked"
+                
+                # Uncheck
+                checkbox.uncheck()
+                assert not checkbox.is_checked(), "Checkbox not unchecked"

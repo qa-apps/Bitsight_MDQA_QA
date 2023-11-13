@@ -404,3 +404,29 @@ class TestDataValidation:
             homepage.navigate_to(page_path)
             page.wait_for_load_state('networkidle')
             
+            # Collect page data
+            data = page.evaluate('''() => {
+                return {
+                    title: document.title,
+                    lang: document.documentElement.lang,
+                    charset: document.characterSet,
+                    hasHeader: !!document.querySelector('header'),
+                    hasFooter: !!document.querySelector('footer'),
+                    hasNav: !!document.querySelector('nav')
+                };
+            }''')
+            
+            page_data[page_path] = data
+            
+        # Validate consistency
+        languages = [data['lang'] for data in page_data.values()]
+        assert len(set(languages)) == 1, "Inconsistent language across pages"
+        
+        charsets = [data['charset'] for data in page_data.values()]
+        assert len(set(charsets)) == 1, "Inconsistent charset across pages"
+        
+        # All pages should have header, footer, nav
+        for path, data in page_data.items():
+            assert data['hasHeader'], f"Page {path} missing header"
+            assert data['hasFooter'], f"Page {path} missing footer"
+            assert data['hasNav'], f"Page {path} missing navigation"

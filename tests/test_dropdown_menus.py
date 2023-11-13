@@ -159,3 +159,63 @@ class TestDropdownMenus:
                     for resource_type in resource_types:
                         if resource_type in text_lower:
                             found_types.append(resource_type)
+                            break
+                            
+            # Resources should have variety
+            assert len(set(found_types)) > 0 or len(resource_links) > 5, "Resources dropdown lacks variety"
+            
+    def test_company_dropdown_complete(self, page: Page):
+        """
+        Complete test of Company dropdown menu functionality
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Find Company menu
+        company_button = page.locator('button:has-text("Company"), a:has-text("Company")').first
+        assert company_button.is_visible(), "Company menu not found"
+        
+        company_button.click()
+        page.wait_for_timeout(500)
+        
+        # Find dropdown
+        dropdown = page.locator('[role="menu"], .dropdown-menu').nth(3) if page.locator('[role="menu"]').count() > 3 else page.locator('[role="menu"], .dropdown-menu').first
+        
+        if dropdown.is_visible():
+            # Check for common company pages
+            expected_pages = ['about', 'team', 'careers', 'contact', 'news', 'partners']
+            dropdown_text = dropdown.text_content().lower()
+            
+            found_pages = [page_type for page_type in expected_pages if page_type in dropdown_text]
+            assert len(found_pages) > 2, f"Company dropdown missing common pages. Found: {found_pages}"
+            
+            # Get all links
+            company_links = dropdown.locator('a').all()
+            assert len(company_links) > 0, "No links in Company dropdown"
+            
+    def test_dropdown_keyboard_navigation(self, page: Page):
+        """
+        Test keyboard navigation through dropdown menus
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Focus on Solutions menu
+        solutions_button = page.locator('button:has-text("Solutions")').first
+        solutions_button.focus()
+        
+        # Open with Enter key
+        page.keyboard.press('Enter')
+        page.wait_for_timeout(500)
+        
+        dropdown = page.locator('[role="menu"], .dropdown-menu').first
+        
+        if dropdown.is_visible():
+            # Navigate with arrow keys
+            page.keyboard.press('ArrowDown')
+            page.wait_for_timeout(100)
+            page.keyboard.press('ArrowDown')
+            page.wait_for_timeout(100)
+            
+            # Check if item is focused
+            focused = page.locator(':focus').first
