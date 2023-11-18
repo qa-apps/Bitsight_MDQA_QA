@@ -368,3 +368,43 @@ class TestIntegrationE2E:
         
     def test_performance_during_journey(self, page: Page):
         """
+        Test performance metrics throughout user journey
+        """
+        homepage = HomePage(page)
+        
+        performance_metrics = []
+        
+        # Measure at different points
+        journey_points = [
+            ('Homepage', '/'),
+            ('Product Page', '/products/third-party-risk-management'),
+            ('Resources', '/resources'),
+            ('Contact', '/contact-us')
+        ]
+        
+        for name, path in journey_points:
+            homepage.navigate_to(path)
+            page.wait_for_load_state('networkidle')
+            
+            # Collect performance metrics
+            metrics = page.evaluate('''() => {
+                const nav = performance.getEntriesByType('navigation')[0];
+                return {
+                    loadTime: nav.loadEventEnd - nav.fetchStart,
+                    domReady: nav.domContentLoadedEventEnd - nav.fetchStart
+                };
+            }''')
+            
+            performance_metrics.append({
+                'page': name,
+                'loadTime': metrics['loadTime'],
+                'domReady': metrics['domReady']
+            })
+            
+        # Verify performance is consistent
+        load_times = [m['loadTime'] for m in performance_metrics]
+        avg_load_time = sum(load_times) / len(load_times)
+        
+        assert avg_load_time < 5000, f"Average load time too high: {avg_load_time}ms"
+        
+        # No single page should be significantly slower
