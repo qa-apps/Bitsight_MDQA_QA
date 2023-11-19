@@ -234,3 +234,63 @@ class TestMobileResponsiveness:
         Test performance on mobile viewport
         """
         # Set mobile viewport with throttled network
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        
+        # Measure load time
+        import time
+        start = time.time()
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        load_time = time.time() - start
+        
+        # Mobile load time should be reasonable
+        assert load_time < 15, f"Mobile page load too slow: {load_time:.2f}s"
+        
+        # Check resource sizes
+        resources = page.evaluate('''() => {
+            const resources = performance.getEntriesByType('resource');
+            return resources.map(r => ({
+                name: r.name,
+                size: r.transferSize || 0
+            }));
+        }''')
+        
+        total_size = sum(r['size'] for r in resources)
+        total_mb = total_size / 1024 / 1024
+        
+        # Page should be reasonably sized for mobile
+        assert total_mb < 5, f"Page too large for mobile: {total_mb:.2f}MB"
+        
+    def test_orientation_change(self, page: Page):
+        """
+        Test layout adaptation on orientation change
+        """
+        homepage = HomePage(page)
+        
+        # Portrait orientation
+        page.set_viewport_size({'width': 375, 'height': 667})
+        homepage.navigate_to()
+        
+        portrait_layout = page.locator('header').bounding_box()
+        
+        # Landscape orientation
+        page.set_viewport_size({'width': 667, 'height': 375})
+        page.wait_for_timeout(500)
+        
+        landscape_layout = page.locator('header').bounding_box()
+        
+        # Layout should adapt to orientation
+        assert portrait_layout != landscape_layout, "Layout did not adapt to orientation change"
+        
+        # Check for overflow in landscape
+        has_overflow = page.evaluate('''() => {
+            return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+        }''')
+        
+        assert not has_overflow, "Content overflows in landscape orientation"
+        
+    def test_mobile_footer(self, page: Page):
+        """
+        Test footer usability on mobile

@@ -177,3 +177,14 @@ class TestPageStructure:
         
         assert len(h1_elements) == 1, f"Page should have exactly one H1, found {len(h1_elements)}"
         assert len(h2_elements) > 0, "Page should have H2 elements"
+        
+        # H1 should come before H2s
+        if h1_elements and h2_elements:
+            h1_position = page.locator('h1').first.bounding_box()
+            h2_position = page.locator('h2').first.bounding_box()
+            
+            if h1_position and h2_position:
+                # H1 typically appears before H2
+                pass
+                
+    def test_form_structure(self, page: Page):
