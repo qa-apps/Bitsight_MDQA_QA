@@ -203,3 +203,56 @@ class TestRegressionFull:
         
         # Get performance metrics
         metrics = page.evaluate('''() => {
+            const perf = performance.getEntriesByType('navigation')[0];
+            return {
+                domContentLoaded: perf.domContentLoadedEventEnd - perf.domContentLoadedEventStart,
+                loadComplete: perf.loadEventEnd - perf.loadEventStart,
+                domInteractive: perf.domInteractive
+            };
+        }''')
+        
+        # Basic performance assertions
+        assert metrics['domInteractive'] > 0, "DOM not interactive"
+        assert metrics['loadComplete'] < 30000, "Page load took too long"
+        
+    def test_accessibility_basics(self, page: Page):
+        """
+        Basic accessibility regression tests
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check for alt text on images
+        images = page.locator('img').all()[:5]
+        for img in images:
+            alt_text = img.get_attribute('alt')
+            # Some decorative images might have empty alt
+            assert alt_text is not None, "Image missing alt attribute"
+            
+        # Check for ARIA labels on buttons
+        buttons = page.locator('button').all()[:5]
+        for button in buttons:
+            text = button.text_content()
+            aria_label = button.get_attribute('aria-label')
+            assert text or aria_label, "Button has no accessible text"
+            
+        # Check for skip navigation link
+        skip_link = page.locator('a[href="#main"], a:has-text("Skip")')
+        # Skip link is a best practice but not mandatory
+        
+    def test_cookie_functionality(self, page: Page):
+        """
+        Test cookie banner and consent functionality
+        """
+        # Clear cookies first
+        context = page.context
+        context.clear_cookies()
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for cookie banner
+        cookie_banner = page.locator('[class*="cookie"], [id*="cookie"], [role="banner"]').first
+        
+        if cookie_banner.is_visible():
+            # Look for accept button
