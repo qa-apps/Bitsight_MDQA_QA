@@ -327,3 +327,6 @@ class TestUIElements:
             items = breadcrumbs.locator('li, .breadcrumb-item').all()
             
             for i, item in enumerate(items):
+                if item.is_visible():
+                    # Check separator exists between items (except last)
+                    if i < len(items) - 1:
