@@ -258,3 +258,15 @@ class TestCrossBrowser:
         homepage = HomePage(page)
         homepage.navigate_to()
         
+        # Test localStorage operations
+        storage_test = page.evaluate('''() => {
+            try {
+                const testKey = 'test_key';
+                const testValue = 'test_value';
+                
+                // Set item
+                localStorage.setItem(testKey, testValue);
+                
+                // Get item
+                const retrieved = localStorage.getItem(testKey);
+                

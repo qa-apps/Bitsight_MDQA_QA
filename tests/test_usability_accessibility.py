@@ -267,3 +267,63 @@ class TestUsabilityAccessibility:
         
         if submit_button and submit_button.is_visible():
             submit_button.click()
+            page.wait_for_timeout(1000)
+            
+            # Look for error messages
+            errors = page.locator('.error, .invalid-feedback, [role="alert"]').all()
+            
+            for error in errors:
+                if error.is_visible():
+                    error_text = error.text_content()
+                    
+                    # Error should have meaningful text
+                    assert error_text and len(error_text) > 5, "Error message too short or missing"
+                    
+                    # Error should be associated with field
+                    aria_describedby = error.get_attribute('aria-describedby')
+                    
+    def test_responsive_text_sizing(self, page: Page):
+        """
+        Test that text remains readable at different zoom levels
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Test at different zoom levels
+        zoom_levels = [1, 1.5, 2]
+        
+        for zoom in zoom_levels:
+            page.evaluate(f'document.body.style.zoom = "{zoom}"')
+            page.wait_for_timeout(500)
+            
+            # Check that main content is still visible
+            main_heading = page.locator('h1').first
+            assert main_heading.is_visible(), f"Content not visible at {zoom}x zoom"
+            
+        # Reset zoom
+        page.evaluate('document.body.style.zoom = "1"')
+        
+    def test_link_purpose_clear(self, page: Page):
+        """
+        Test that link purposes are clear from their text
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check for vague link text
+        vague_texts = ['click here', 'read more', 'more', 'here', 'link']
+        links = page.locator('a').all()[:20]
+        
+        for link in links:
+            if link.is_visible():
+                text = (link.text_content() or '').lower().strip()
+                
+                # Links shouldn't use vague text alone
+                if text in vague_texts:
+                    # Check if there's additional context
+                    aria_label = link.get_attribute('aria-label')
+                    title = link.get_attribute('title')
+                    
+                    assert aria_label or title, f"Link with vague text '{text}' lacks context"
+                    
+    def test_multimedia_accessibility(self, page: Page):
