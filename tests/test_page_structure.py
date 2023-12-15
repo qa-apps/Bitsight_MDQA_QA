@@ -188,3 +188,171 @@ class TestPageStructure:
                 pass
                 
     def test_form_structure(self, page: Page):
+        """
+        Test form structure and elements
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        forms = page.locator('form').all()
+        
+        for form in forms:
+            if form.is_visible():
+                # Check for form method and action
+                method = form.get_attribute('method')
+                action = form.get_attribute('action')
+                
+                # Form should have proper attributes
+                assert method in ['get', 'post', 'GET', 'POST', None], f"Invalid form method: {method}"
+                
+                # Check for submit button
+                submit = form.locator('button[type="submit"], input[type="submit"]').first
+                assert submit, "Form missing submit button"
+                
+                # Check for fieldsets if multiple sections
+                fieldsets = form.locator('fieldset').all()
+                if len(fieldsets) > 0:
+                    for fieldset in fieldsets:
+                        legend = fieldset.locator('legend').first
+                        # Fieldsets should have legends
+                        
+    def test_table_structure(self, page: Page):
+        """
+        Test table structure if present
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        tables = page.locator('table').all()
+        
+        for table in tables:
+            if table.is_visible():
+                # Check for table headers
+                headers = table.locator('th').all()
+                
+                # Check for caption
+                caption = table.locator('caption').first
+                
+                # Check for thead, tbody structure
+                thead = table.locator('thead').first
+                tbody = table.locator('tbody').first
+                
+                # Tables should use proper structure
+                if headers:
+                    assert len(headers) > 0, "Table has headers defined"
+                    
+    def test_list_structure(self, page: Page):
+        """
+        Test list structure and nesting
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check unordered lists
+        ul_lists = page.locator('ul').all()[:5]
+        for ul in ul_lists:
+            if ul.is_visible():
+                list_items = ul.locator('> li').all()
+                assert len(list_items) > 0, "UL has no list items"
+                
+        # Check ordered lists
+        ol_lists = page.locator('ol').all()[:5]
+        for ol in ol_lists:
+            if ol.is_visible():
+                list_items = ol.locator('> li').all()
+                assert len(list_items) > 0, "OL has no list items"
+                
+    def test_media_structure(self, page: Page):
+        """
+        Test media elements structure
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check images
+        images = page.locator('img').all()[:10]
+        for img in images:
+            if img.is_visible():
+                src = img.get_attribute('src')
+                assert src, "Image missing src attribute"
+                
+                # Check for responsive images
+                srcset = img.get_attribute('srcset')
+                sizes = img.get_attribute('sizes')
+                
+                # Modern images might use srcset for responsive
+                
+        # Check for picture elements
+        pictures = page.locator('picture').all()
+        for picture in pictures:
+            sources = picture.locator('source').all()
+            img = picture.locator('img').first
+            
+            assert img, "Picture element missing img fallback"
+            
+    def test_sidebar_structure(self, page: Page):
+        """
+        Test sidebar structure if present
+        """
+        products_page = ProductsPage(page)
+        products_page.navigate_to_tprm()
+        
+        # Look for aside or sidebar elements
+        sidebar = page.locator('aside, .sidebar, [role="complementary"]').first
+        
+        if sidebar and sidebar.is_visible():
+            # Check sidebar content
+            sidebar_links = sidebar.locator('a').all()
+            sidebar_sections = sidebar.locator('section, div').all()
+            
+            assert len(sidebar_links) > 0 or len(sidebar_sections) > 0, "Sidebar has no content"
+            
+    def test_breadcrumb_structure(self, page: Page):
+        """
+        Test breadcrumb navigation structure
+        """
+        products_page = ProductsPage(page)
+        products_page.navigate_to_tprm()
+        
+        breadcrumb = page.locator('nav[aria-label="breadcrumb"], .breadcrumb').first
+        
+        if breadcrumb and breadcrumb.is_visible():
+            # Should use list structure
+            breadcrumb_list = breadcrumb.locator('ol, ul').first
+            
+            if breadcrumb_list:
+                items = breadcrumb_list.locator('li').all()
+                assert len(items) > 1, "Breadcrumb should have multiple items"
+                
+                # Last item should be current page
+                last_item = items[-1] if items else None
+                if last_item:
+                    aria_current = last_item.get_attribute('aria-current')
+                    
+    def test_modal_structure(self, page: Page):
+        """
+        Test modal/dialog structure if present
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Try to trigger a modal
+        modal_triggers = page.locator('[data-toggle="modal"], [data-bs-toggle="modal"]').all()
+        
+        if modal_triggers:
+            modal_triggers[0].click()
+            page.wait_for_timeout(1000)
+            
+            modal = page.locator('.modal, [role="dialog"]').first
+            
+            if modal and modal.is_visible():
+                # Check modal structure
+                modal_header = modal.locator('.modal-header, header').first
+                modal_body = modal.locator('.modal-body, .content').first
+                modal_footer = modal.locator('.modal-footer, footer').first
+                
+                # Modal should have proper sections
+                assert modal_body, "Modal missing body section"

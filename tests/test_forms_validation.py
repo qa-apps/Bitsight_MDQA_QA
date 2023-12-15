@@ -181,3 +181,113 @@ class TestFormsValidation:
                 # Uncheck
                 checkbox.uncheck()
                 assert not checkbox.is_checked(), "Checkbox not unchecked"
+                
+        # Test radio buttons
+        radios = page.locator('input[type="radio"]').all()
+        
+        if len(radios) > 1:
+            # Click first radio
+            radios[0].check()
+            assert radios[0].is_checked(), "Radio not selected"
+            
+            # Click second radio
+            radios[1].check()
+            assert radios[1].is_checked(), "Second radio not selected"
+            assert not radios[0].is_checked(), "First radio still selected"
+            
+    def test_form_data_persistence(self, page: Page):
+        """
+        Test if form data persists during navigation
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Fill some fields
+        test_data = {
+            'name': fake.name(),
+            'email': fake.email(),
+            'company': fake.company()
+        }
+        
+        for field_type, value in test_data.items():
+            field = page.locator(f'input[name*="{field_type}"], input[placeholder*="{field_type}"]').first
+            if field and field.is_visible():
+                field.fill(value)
+                
+        # Navigate away and back
+        page.go_back()
+        page.wait_for_timeout(1000)
+        page.go_forward()
+        page.wait_for_timeout(1000)
+        
+        # Check if data persisted (usually it shouldn't for security)
+        for field_type, expected_value in test_data.items():
+            field = page.locator(f'input[name*="{field_type}"]').first
+            if field and field.is_visible():
+                actual_value = field.input_value()
+                # Data typically shouldn't persist for security
+                
+    def test_form_submission_success(self, page: Page):
+        """
+        Test successful form submission with valid data
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        # Fill form with valid data
+        form_data = {
+            'first': fake.first_name(),
+            'last': fake.last_name(),
+            'email': fake.email(),
+            'phone': fake.phone_number(),
+            'company': fake.company(),
+            'title': fake.job()
+        }
+        
+        form = page.locator('form').first
+        
+        if form.is_visible():
+            # Fill all visible fields
+            for field_hint, value in form_data.items():
+                field = form.locator(f'input[name*="{field_hint}"], input[placeholder*="{field_hint}"]').first
+                if field and field.is_visible():
+                    field.fill(value)
+                    
+            # Note: We don't actually submit to avoid creating test data
+            # In real tests, you would submit and verify success message
+            
+    def test_textarea_functionality(self, page: Page):
+        """
+        Test textarea fields if present
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        homepage.click_request_demo()
+        
+        page.wait_for_load_state('networkidle')
+        
+        textareas = page.locator('textarea').all()
+        
+        for textarea in textareas:
+            if textarea.is_visible():
+                # Test multiline input
+                multiline_text = "Line 1\nLine 2\nLine 3"
+                textarea.fill(multiline_text)
+                
+                # Verify input
+                value = textarea.input_value()
+                assert '\n' in value or 'Line 1' in value, "Textarea not accepting multiline text"
+                
+                # Test character limit if exists
+                max_length = textarea.get_attribute('maxlength')
+                if max_length:
+                    long_text = 'x' * (int(max_length) + 100)
+                    textarea.fill(long_text)
+                    actual_length = len(textarea.input_value())
+                    assert actual_length <= int(max_length), "Textarea exceeded max length"

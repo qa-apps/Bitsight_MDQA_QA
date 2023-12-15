@@ -256,3 +256,10 @@ class TestRegressionFull:
         
         if cookie_banner.is_visible():
             # Look for accept button
+            accept_button = cookie_banner.locator('button:has-text("Accept"), button:has-text("Allow")').first
+            if accept_button.is_visible():
+                accept_button.click()
+                page.wait_for_timeout(1000)
+                
+                # Verify banner is hidden
+                assert not cookie_banner.is_visible(), "Cookie banner still visible after acceptance"

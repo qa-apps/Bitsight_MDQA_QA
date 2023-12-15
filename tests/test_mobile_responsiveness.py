@@ -294,3 +294,83 @@ class TestMobileResponsiveness:
     def test_mobile_footer(self, page: Page):
         """
         Test footer usability on mobile
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Scroll to footer
+        footer = page.locator('footer').first
+        footer.scroll_into_view_if_needed()
+        
+        # Check footer links
+        footer_links = footer.locator('a').all()
+        
+        for link in footer_links[:5]:
+            if link.is_visible():
+                box = link.bounding_box()
+                
+                if box:
+                    # Links should be tappable
+                    assert box['height'] >= 30, f"Footer link too small for mobile: {box['height']}px"
+                    
+        # Check if footer is organized for mobile
+        footer_sections = footer.locator('div, nav, ul').all()
+        
+        # Footer should be organized vertically on mobile
+        
+    def test_mobile_search(self, page: Page):
+        """
+        Test search functionality on mobile
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Look for search on mobile
+        search_button = page.locator('[aria-label="Search"], .search-icon, button:has-text("Search")').first
+        
+        if search_button.is_visible():
+            search_button.click()
+            page.wait_for_timeout(500)
+            
+            # Search input should appear
+            search_input = page.locator('input[type="search"], input[placeholder*="search"]').first
+            
+            if search_input.is_visible():
+                # Check if keyboard appears (can't directly test but input should focus)
+                search_input.focus()
+                
+                # Input should be properly sized
+                box = search_input.bounding_box()
+                if box:
+                    assert box['width'] > 200, f"Search input too narrow on mobile: {box['width']}px"
+                    
+    def test_mobile_video_player(self, page: Page):
+        """
+        Test video player on mobile if present
+        """
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        videos = page.locator('video, iframe[src*="youtube"], iframe[src*="vimeo"]').all()
+        
+        for video in videos[:2]:
+            if video.is_visible():
+                box = video.bounding_box()
+                
+                if box:
+                    # Video should fit mobile viewport
+                    assert box['width'] <= 375, f"Video wider than mobile viewport: {box['width']}px"
+                    
+                    # Check for controls
+                    if video.evaluate('el => el.tagName') == 'VIDEO':
+                        has_controls = video.get_attribute('controls')
+                        assert has_controls is not None, "Video missing controls for mobile"

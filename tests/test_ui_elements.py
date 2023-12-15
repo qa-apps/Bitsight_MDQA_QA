@@ -330,3 +330,10 @@ class TestUIElements:
                 if item.is_visible():
                     # Check separator exists between items (except last)
                     if i < len(items) - 1:
+                        # Separator could be CSS or text
+                        pass
+                        
+                    # Last item should be current page
+                    if i == len(items) - 1:
+                        aria_current = item.get_attribute('aria-current')
+                        # Last breadcrumb item represents current page

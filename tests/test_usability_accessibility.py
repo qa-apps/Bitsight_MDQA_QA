@@ -327,3 +327,27 @@ class TestUsabilityAccessibility:
                     assert aria_label or title, f"Link with vague text '{text}' lacks context"
                     
     def test_multimedia_accessibility(self, page: Page):
+        """
+        Test accessibility of multimedia content
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check videos
+        videos = page.locator('video').all()
+        for video in videos:
+            if video.is_visible():
+                # Check for captions
+                tracks = video.locator('track[kind="captions"], track[kind="subtitles"]').all()
+                # Videos should ideally have captions
+                
+                # Check for controls
+                has_controls = video.get_attribute('controls')
+                assert has_controls is not None, "Video missing controls attribute"
+                
+        # Check audio elements
+        audio_elements = page.locator('audio').all()
+        for audio in audio_elements:
+            if audio.is_visible():
+                has_controls = audio.get_attribute('controls')
+                assert has_controls is not None, "Audio missing controls"

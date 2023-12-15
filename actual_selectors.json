@@ -1,0 +1,169 @@
+{
+  "navigation": {
+    "mainNav": {
+      "tagName": "HEADER",
+      "className": "site-header site-header--transparent",
+      "id": ""
+    },
+    "menuItems": [
+      {
+        "text": "Enterprise Adoption of Bitsight\u2019s Integrated Third-Party Risk and Exposure Management Solutions Surges Amid Shift to AI-Driven Workflows",
+        "tagName": "A",
+        "className": "main-menu-block__cta--headline",
+        "href": "https://www.bitsight.com/press-releases/enterprise-adoption-bitsights-integrated-third-party-risk-and-exposure-management",
+        "hasDropdown": false
+      },
+      {
+        "text": "Resources",
+        "tagName": "A",
+        "className": "main-menu-block__item-link",
+        "href": "https://www.bitsight.com/resources",
+        "hasDropdown": false
+      },
+      {
+        "text": "Product datasheets",
+        "tagName": "A",
+        "className": "main-menu-block__item-link",
+        "href": "https://www.bitsight.com/resources?field_resource_type_target_id=266",
+        "hasDropdown": false
+      },
+      {
+        "text": "All Resources",
+        "tagName": "A",
+        "className": "main-menu-block__item-link",
+        "href": "https://www.bitsight.com/resources",
+        "hasDropdown": false
+      },
+      {
+        "text": "Interactive Product Tours\n                                                                                                      NEW",
+        "tagName": "A",
+        "className": "main-menu-block__item-link",
+        "href": "https://www.bitsight.com/products/tours",
+        "hasDropdown": false
+      }
+    ]
+  },
+  "buttons": {
+    "cta": [
+      {
+        "text": "Request Demo",
+        "tagName": "A",
+        "className": " ",
+        "href": "https://www.bitsight.com/demo/security-rating"
+      },
+      {
+        "text": "Request Demo",
+        "tagName": "A",
+        "className": " ",
+        "href": "https://www.bitsight.com/demo/security-rating"
+      },
+      {
+        "text": "Request supply chain demo",
+        "tagName": "A",
+        "className": "",
+        "href": "https://www.bitsight.com/demo/security-rating"
+      },
+      {
+        "text": "Request exposure demo",
+        "tagName": "A",
+        "className": "",
+        "href": "https://www.bitsight.com/demo/bitsight-demo"
+      },
+      {
+        "text": "Request threat intel demo",
+        "tagName": "A",
+        "className": "",
+        "href": "https://www.bitsight.com/demo/bitsight-threat-intelligence-demo"
+      },
+      {
+        "text": "Request analytics demo",
+        "tagName": "A",
+        "className": "",
+        "href": "https://www.bitsight.com/demo/security-rating"
+      },
+      {
+        "text": "Get a free demo",
+        "tagName": "A",
+        "className": "button card__buttoncard__button transparent_light",
+        "href": "https://www.bitsight.com/demo/bitsight-demo"
+      },
+      {
+        "text": "Get A Free Demo",
+        "tagName": "A",
+        "className": " ",
+        "href": "https://www.bitsight.com/demo/bitsight-demo"
+      },
+      {
+        "text": "Login",
+        "tagName": "A",
+        "className": " ",
+        "href": "https://service.bitsighttech.com/"
+      },
+      {
+        "text": "Login",
+        "tagName": "A",
+        "className": " ",
+        "href": "https://service.bitsighttech.com/"
+      },
+      {
+        "text": "Contact Us",
+        "tagName": "A",
+        "className": "main-menu-block__item-link",
+        "href": "https://www.bitsight.com/contact-us"
+      },
+      {
+        "text": "Contact Us",
+        "tagName": "A",
+        "className": "button button--filled-white",
+        "href": "https://www.bitsight.com/contact-us"
+      }
+    ]
+  },
+  "forms": {
+    "count": 2,
+    "details": [
+      {
+        "id": "views-exposed-form-search-search-page",
+        "className": "",
+        "action": "https://www.bitsight.com/search",
+        "method": "get"
+      },
+      {
+        "id": "views-exposed-form-search-search-page",
+        "className": "",
+        "action": "https://www.bitsight.com/search",
+        "method": "get"
+      }
+    ]
+  },
+  "links": {},
+  "structure": {
+    "hero": {
+      "h1Text": "AI-powered intelligence that outsmarts cyber risk",
+      "h1Class": "",
+      "parentClass": "hero-homepage__title"
+    },
+    "footer": {
+      "className": "site-footer footer",
+      "linkCount": 27
+    },
+    "imageCount": 114,
+    "firstImages": [
+      {
+        "src": "https://www.bitsight.com/sites/default/files/2025/08/26/Hero%20bg%20%281%29.svg",
+        "alt": "HP hero wave background",
+        "className": ""
+      },
+      {
+        "src": "https://www.bitsight.com/sites/default/files/2024/04/27/Products_EnterpriseSecurity.svg",
+        "alt": "",
+        "className": ""
+      },
+      {
+        "src": "https://www.bitsight.com/sites/default/files/2024/04/27/Products_DigitalSupplyChainSecurity.svg",
+        "alt": "",
+        "className": ""
+      }
+    ]
+  }
+}

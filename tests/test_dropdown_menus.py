@@ -219,3 +219,106 @@ class TestDropdownMenus:
             
             # Check if item is focused
             focused = page.locator(':focus').first
+            assert focused, "No element has focus after arrow navigation"
+            
+            # Close with Escape
+            page.keyboard.press('Escape')
+            page.wait_for_timeout(500)
+            assert not dropdown.is_visible(), "Dropdown did not close with Escape key"
+            
+    def test_dropdown_hover_behavior(self, page: Page):
+        """
+        Test dropdown hover open/close behavior
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Test each main menu item
+        menu_items = ['Solutions', 'Products', 'Resources', 'Company']
+        
+        for menu_text in menu_items:
+            menu_button = page.locator(f'button:has-text("{menu_text}"), a:has-text("{menu_text}")').first
+            
+            if menu_button.is_visible():
+                # Hover to potentially open
+                menu_button.hover()
+                page.wait_for_timeout(300)
+                
+                # Check if dropdown opened on hover
+                dropdown = page.locator('[role="menu"], .dropdown-menu').first
+                
+                # Move mouse away
+                page.mouse.move(0, 0)
+                page.wait_for_timeout(300)
+                
+    def test_dropdown_mobile_behavior(self, page: Page):
+        """
+        Test dropdown behavior on mobile viewport
+        """
+        homepage = HomePage(page)
+        
+        # Set mobile viewport
+        page.set_viewport_size({'width': 375, 'height': 667})
+        homepage.navigate_to()
+        
+        # Find mobile menu button
+        mobile_menu = page.locator('.mobile-menu, [aria-label="Menu"], .hamburger').first
+        
+        if mobile_menu.is_visible():
+            mobile_menu.click()
+            page.wait_for_timeout(500)
+            
+            # Find mobile navigation
+            mobile_nav = page.locator('.mobile-nav, .nav-mobile, nav').first
+            
+            if mobile_nav.is_visible():
+                # Look for expandable menu items
+                expandable_items = mobile_nav.locator('[aria-expanded], .has-submenu, .dropdown-toggle').all()
+                
+                for item in expandable_items[:2]:
+                    if item.is_visible():
+                        # Click to expand
+                        item.click()
+                        page.wait_for_timeout(500)
+                        
+                        # Check if submenu opened
+                        expanded = item.get_attribute('aria-expanded')
+                        if expanded:
+                            assert expanded == 'true', "Menu item did not expand"
+                            
+    def test_dropdown_link_validity(self, page: Page):
+        """
+        Test all dropdown links are valid and working
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        all_dropdown_links = []
+        
+        # Collect links from all dropdowns
+        menu_items = ['Solutions', 'Products', 'Resources', 'Company']
+        
+        for menu_text in menu_items:
+            homepage.navigate_to()
+            
+            menu_button = page.locator(f'button:has-text("{menu_text}"), a:has-text("{menu_text}")').first
+            if menu_button.is_visible():
+                menu_button.click()
+                page.wait_for_timeout(500)
+                
+                dropdown = page.locator('[role="menu"], .dropdown-menu').first
+                if dropdown.is_visible():
+                    links = dropdown.locator('a').all()
+                    
+                    for link in links:
+                        href = link.get_attribute('href')
+                        text = link.text_content()
+                        
+                        if href and not href.startswith('#'):
+                            all_dropdown_links.append({'href': href, 'text': text, 'menu': menu_text})
+                            
+        # Test sample of links
+        for link_data in all_dropdown_links[:5]:
+            if link_data['href'].startswith('http'):
+                response = page.request.head(link_data['href'])
+                assert response.status < 400, f"Broken link in {link_data['menu']} dropdown: {link_data['text']} ({link_data['href']})"

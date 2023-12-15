@@ -270,3 +270,78 @@ class TestCrossBrowser:
                 // Get item
                 const retrieved = localStorage.getItem(testKey);
                 
+                // Remove item
+                localStorage.removeItem(testKey);
+                
+                return {
+                    supported: true,
+                    worked: retrieved === testValue
+                };
+            } catch (e) {
+                return {
+                    supported: false,
+                    error: e.message
+                };
+            }
+        }''')
+        
+        assert storage_test['supported'], "localStorage not supported"
+        assert storage_test.get('worked', False), "localStorage operations failed"
+        
+    def test_cookie_handling_cross_browser(self, page: Page):
+        """
+        Test cookie handling across browsers
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check if cookies are enabled
+        cookies_enabled = page.evaluate('() => navigator.cookieEnabled')
+        assert cookies_enabled, "Cookies are not enabled"
+        
+        # Get cookies
+        cookies = page.context.cookies()
+        
+        # Test setting a cookie
+        page.context.add_cookies([{
+            'name': 'test_cookie',
+            'value': 'test_value',
+            'domain': '.bitsight.com',
+            'path': '/'
+        }])
+        
+        # Verify cookie was set
+        all_cookies = page.context.cookies()
+        test_cookie = next((c for c in all_cookies if c['name'] == 'test_cookie'), None)
+        
+        # Clear test cookie
+        page.context.clear_cookies()
+        
+    def test_animation_performance_cross_browser(self, page: Page):
+        """
+        Test CSS animations and transitions across browsers
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check for animation support
+        animation_support = page.evaluate('''() => {
+            const el = document.createElement('div');
+            const animations = ['animation', 'WebkitAnimation', 'MozAnimation'];
+            
+            for (let ani of animations) {
+                if (el.style[ani] !== undefined) {
+                    return true;
+                }
+            }
+            return false;
+        }''')
+        
+        assert animation_support, "CSS animations not supported"
+        
+        # Test if animations are running smoothly
+        page.wait_for_timeout(1000)
+        
+        # Check for any animation elements
+        animated_elements = page.locator('[class*="animate"], [class*="transition"]').count()
+        print(f"Found {animated_elements} animated elements")

@@ -408,3 +408,5 @@ class TestIntegrationE2E:
         assert avg_load_time < 5000, f"Average load time too high: {avg_load_time}ms"
         
         # No single page should be significantly slower
+        for metric in performance_metrics:
+            assert metric['loadTime'] < avg_load_time * 2, f"{metric['page']} is too slow: {metric['loadTime']}ms"
