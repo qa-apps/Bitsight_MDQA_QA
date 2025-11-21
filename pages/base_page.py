@@ -80,3 +80,90 @@ class BasePage:
         element = self.page.locator(locator)
         element.scroll_into_view_if_needed()
         
+    def take_screenshot(self, name: str) -> None:
+        """
+        Take a screenshot of the current page
+        """
+        self.page.screenshot(path=f'screenshots/{name}.png', full_page=True)
+        
+    def get_page_url(self) -> str:
+        """
+        Get current page URL
+        """
+        return self.page.url
+        
+    def go_back(self) -> None:
+        """
+        Navigate back in browser history
+        """
+        self.page.go_back()
+        
+    def refresh_page(self) -> None:
+        """
+        Refresh the current page
+        """
+        self.page.reload()
+        
+    def wait_for_element(self, locator: str, state: str = 'visible') -> None:
+        """
+        Wait for element to be in specified state
+        """
+        element = self.page.locator(locator)
+        element.wait_for(state=state)
+        
+    def get_attribute(self, locator: str, attribute: str) -> Optional[str]:
+        """
+        Get attribute value of an element
+        """
+        element = self.page.locator(locator)
+        return element.get_attribute(attribute)
+        
+    def hover_over_element(self, locator: str) -> None:
+        """
+        Hover over an element
+        """
+        element = self.page.locator(locator)
+        element.hover()
+        
+    def select_dropdown_option(self, locator: str, value: str) -> None:
+        """
+        Select an option from dropdown
+        """
+        element = self.page.locator(locator)
+        element.select_option(value)
+        
+    def get_dropdown_options(self, locator: str) -> List[str]:
+        """
+        Get all options from a dropdown
+        """
+        element = self.page.locator(locator)
+        options = element.locator('option').all()
+        return [opt.text_content() or '' for opt in options]
+        
+    def check_broken_links(self) -> List[Dict[str, Any]]:
+        """
+        Check for broken links on the page
+        """
+        broken_links = []
+        links = self.get_all_links()
+        
+        for link in links:
+            if link and not link.startswith('#'):
+                try:
+                    response = self.page.request.get(link)
+                    if response.status >= 400:
+                        broken_links.append({'url': link, 'status': response.status})
+                except Exception as e:
+                    broken_links.append({'url': link, 'error': str(e)})
+                    
+        return broken_links
+        
+    def check_images_loaded(self) -> bool:
+        """
+        Check if all images are properly loaded
+        """
+        images = self.page.locator('img').all()
+        for img in images:
+            if not img.is_visible() or img.get_attribute('naturalWidth') == '0':
+                return False
+        return True

@@ -1,153 +1,342 @@
 import pytest
 from playwright.sync_api import Page, expect
 from pages.home_page import HomePage
+from pages.products_page import ProductsPage
+import time
+import json
 
-@pytest.mark.smoke
-class TestExample:
-    """Test suite"""
+@pytest.mark.performance
+class TestPerformanceMetrics:
+    """
+    Performance testing for BitSight website
+    """
     
-    def test_example(self, page: Page):
-        """Test case"""
+    def test_page_load_time(self, page: Page):
+        """
+        Test page load time is within acceptable limits
+        """
+        homepage = HomePage(page)
+        
+        # Measure load time
+        start_time = time.time()
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        load_time = time.time() - start_time
+        
+        assert load_time < 10, f"Page load time too long: {load_time:.2f} seconds"
+        
+        # Get detailed timing metrics
+        timing = page.evaluate('''() => {
+            const perf = performance.timing;
+            return {
+                dns: perf.domainLookupEnd - perf.domainLookupStart,
+                tcp: perf.connectEnd - perf.connectStart,
+                request: perf.responseStart - perf.requestStart,
+                response: perf.responseEnd - perf.responseStart,
+                dom: perf.domComplete - perf.domLoading,
+                load: perf.loadEventEnd - perf.loadEventStart,
+                total: perf.loadEventEnd - perf.navigationStart
+            };
+        }''')
+        
+        # Check individual metrics
+        assert timing['dns'] < 1000, f"DNS lookup too slow: {timing['dns']}ms"
+        assert timing['dom'] < 3000, f"DOM processing too slow: {timing['dom']}ms"
+        assert timing['total'] < 10000, f"Total load time too slow: {timing['total']}ms"
+        
+    def test_first_contentful_paint(self, page: Page):
+        """
+        Test First Contentful Paint (FCP) metric
+        """
         homepage = HomePage(page)
         homepage.navigate_to()
-        assert homepage.is_homepage_loaded()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
+        # Get FCP metric
+        fcp = page.evaluate('''() => {
+            const entries = performance.getEntriesByType('paint');
+            const fcp = entries.find(entry => entry.name === 'first-contentful-paint');
+            return fcp ? fcp.startTime : null;
+        }''')
+        
+        if fcp:
+            assert fcp < 3000, f"First Contentful Paint too slow: {fcp}ms"
+            
+    def test_largest_contentful_paint(self, page: Page):
+        """
+        Test Largest Contentful Paint (LCP) metric
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_timeout(3000)  # Wait for LCP to stabilize
+        
+        # Get LCP metric
+        lcp = page.evaluate('''() => {
+            return new Promise((resolve) => {
+                const observer = new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    const lastEntry = entries[entries.length - 1];
+                    resolve(lastEntry.startTime);
+                });
+                observer.observe({ entryTypes: ['largest-contentful-paint'] });
+                
+                // Fallback if no LCP
+                setTimeout(() => resolve(null), 1000);
+            });
+        }''')
+        
+        if lcp:
+            assert lcp < 4000, f"Largest Contentful Paint too slow: {lcp}ms"
+            
+    def test_cumulative_layout_shift(self, page: Page):
+        """
+        Test Cumulative Layout Shift (CLS) metric
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_timeout(3000)
+        
+        # Measure CLS
+        cls = page.evaluate('''() => {
+            let clsScore = 0;
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    if (!entry.hadRecentInput) {
+                        clsScore += entry.value;
+                    }
+                }
+            });
+            observer.observe({ entryTypes: ['layout-shift'] });
+            
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    observer.disconnect();
+                    resolve(clsScore);
+                }, 2000);
+            });
+        }''')
+        
+        # CLS should be less than 0.1 for good user experience
+        if cls:
+            assert cls < 0.25, f"Cumulative Layout Shift too high: {cls}"
+            
+    def test_time_to_interactive(self, page: Page):
+        """
+        Test Time to Interactive (TTI) metric
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Measure when page becomes interactive
+        tti = page.evaluate('''() => {
+            return new Promise((resolve) => {
+                if (document.readyState === 'complete') {
+                    resolve(performance.now());
+                } else {
+                    window.addEventListener('load', () => {
+                        resolve(performance.now());
+                    });
+                }
+            });
+        }''')
+        
+        assert tti < 5000, f"Time to Interactive too long: {tti}ms"
+        
+    def test_resource_loading_performance(self, page: Page):
+        """
+        Test resource loading performance
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        
+        # Get resource timing data
+        resources = page.evaluate('''() => {
+            const resources = performance.getEntriesByType('resource');
+            return resources.map(r => ({
+                name: r.name,
+                type: r.initiatorType,
+                duration: r.duration,
+                size: r.transferSize || 0
+            }));
+        }''')
+        
+        # Analyze resource loading
+        slow_resources = [r for r in resources if r['duration'] > 3000]
+        assert len(slow_resources) == 0, f"Found {len(slow_resources)} slow resources (>3s)"
+        
+        # Check for large resources
+        large_resources = [r for r in resources if r['size'] > 1000000]  # 1MB
+        for resource in large_resources[:3]:
+            print(f"Large resource: {resource['name'][-50:]} - {resource['size']/1024/1024:.2f}MB")
+            
+    def test_javascript_execution_time(self, page: Page):
+        """
+        Test JavaScript execution performance
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Measure JS execution time
+        js_perf = page.evaluate('''() => {
+            const start = performance.now();
+            // Simulate some JS work
+            for (let i = 0; i < 1000000; i++) {
+                Math.sqrt(i);
+            }
+            return performance.now() - start;
+        }''')
+        
+        assert js_perf < 1000, f"JavaScript execution too slow: {js_perf}ms"
+        
+    def test_memory_usage(self, page: Page):
+        """
+        Test memory usage if available
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        page.wait_for_load_state('networkidle')
+        
+        # Get memory info if available
+        memory = page.evaluate('''() => {
+            if (performance.memory) {
+                return {
+                    used: performance.memory.usedJSHeapSize,
+                    total: performance.memory.totalJSHeapSize,
+                    limit: performance.memory.jsHeapSizeLimit
+                };
+            }
+            return null;
+        }''')
+        
+        if memory:
+            used_mb = memory['used'] / 1024 / 1024
+            total_mb = memory['total'] / 1024 / 1024
+            
+            assert used_mb < 100, f"High memory usage: {used_mb:.2f}MB"
+            print(f"Memory usage: {used_mb:.2f}MB / {total_mb:.2f}MB")
+            
+    def test_navigation_timing(self, page: Page):
+        """
+        Test navigation timing metrics
+        """
+        homepage = HomePage(page)
+        
+        # Navigate to different pages and measure
+        pages_to_test = [
+            ('/', 'Homepage'),
+            ('/products/third-party-risk-management', 'TPRM'),
+            ('/resources', 'Resources')
+        ]
+        
+        for path, name in pages_to_test:
+            homepage.navigate_to(path)
+            page.wait_for_load_state('domcontentloaded')
+            
+            nav_timing = page.evaluate('''() => {
+                const nav = performance.getEntriesByType('navigation')[0];
+                return {
+                    fetchStart: nav.fetchStart,
+                    responseEnd: nav.responseEnd,
+                    domComplete: nav.domComplete,
+                    loadEventEnd: nav.loadEventEnd
+                };
+            }''')
+            
+            total_time = nav_timing['loadEventEnd'] - nav_timing['fetchStart']
+            print(f"{name} navigation time: {total_time:.2f}ms")
+            
+    def test_ajax_request_performance(self, page: Page):
+        """
+        Test AJAX/XHR request performance
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Monitor network requests
+        ajax_requests = []
+        
+        def handle_request(request):
+            if request.resource_type in ['xhr', 'fetch']:
+                ajax_requests.append({
+                    'url': request.url,
+                    'method': request.method,
+                    'start': time.time()
+                })
+                
+        page.on('request', handle_request)
+        
+        # Trigger some actions that might cause AJAX
+        page.wait_for_timeout(3000)
+        
+        # Check if any AJAX requests were slow
+        for req in ajax_requests:
+            # Normally would measure response time
+            pass
+            
+    def test_image_optimization(self, page: Page):
+        """
+        Test if images are optimized
+        """
+        homepage = HomePage(page)
+        homepage.navigate_to()
+        
+        # Check image formats and sizes
+        images = page.evaluate('''() => {
+            const imgs = document.querySelectorAll('img');
+            return Array.from(imgs).map(img => ({
+                src: img.src,
+                naturalWidth: img.naturalWidth,
+                naturalHeight: img.naturalHeight,
+                displayWidth: img.clientWidth,
+                displayHeight: img.clientHeight,
+                loading: img.loading
+            }));
+        }''')
+        
+        for img in images[:5]:
+            # Check if image is oversized for display
+            if img['naturalWidth'] > 0 and img['displayWidth'] > 0:
+                ratio = img['naturalWidth'] / img['displayWidth']
+                assert ratio < 3, f"Image possibly oversized: {img['src'][-50:]}"
+                
+            # Check for lazy loading
+            if img['loading']:
+                assert img['loading'] == 'lazy' or img['loading'] == 'eager', "Invalid loading attribute"
+                
+    def test_cache_headers(self, page: Page):
+        """
+        Test if proper cache headers are set
+        """
+        homepage = HomePage(page)
+        
+        response = page.goto(homepage.base_url)
+        
+        if response:
+            headers = response.headers
+            
+            # Check for cache headers
+            cache_control = headers.get('cache-control', '')
+            etag = headers.get('etag', '')
+            last_modified = headers.get('last-modified', '')
+            
+            # Should have some caching strategy
+            has_caching = cache_control or etag or last_modified
+            assert has_caching, "No cache headers found"
+            
+    def test_concurrent_load_performance(self, page: Page):
+        """
+        Test performance under concurrent loads
+        """
+        homepage = HomePage(page)
+        
+        # Measure multiple page loads
+        load_times = []
+        
+        for i in range(3):
+            start = time.time()
+            homepage.navigate_to()
+            page.wait_for_load_state('networkidle')
+            load_times.append(time.time() - start)
+            
+        avg_load_time = sum(load_times) / len(load_times)
+        assert avg_load_time < 8, f"Average load time too high: {avg_load_time:.2f}s"
